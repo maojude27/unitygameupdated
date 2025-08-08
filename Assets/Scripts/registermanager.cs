@@ -14,13 +14,13 @@ public class RegisterManager : MonoBehaviour
     [Header("Buttons")]
     public Button submitButton;
 
-    [Header("Pop-Up")]
-    public GameObject successPopup;
+    [Header("UI Message")]
+    public TMP_Text messageText;
 
     void Start()
     {
-        // Hide the pop-up at start
-        successPopup.SetActive(false);
+        // Clear the message at start
+        messageText.text = "";
 
         // Assign submit button listener
         submitButton.onClick.AddListener(OnRegister);
@@ -38,20 +38,20 @@ public class RegisterManager : MonoBehaviour
         if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName) ||
             string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(confirmPassword))
         {
-            Debug.LogWarning("Please fill in all fields.");
+            messageText.text = "Please fill in all fields.";
             return;
         }
 
         if (password != confirmPassword)
         {
-            Debug.LogWarning("Passwords do not match.");
+            messageText.text = "Passwords do not match.";
             return;
         }
 
-        // Simulate registration logic here (e.g., send to server or save locally)
+        // Simulate registration logic here
         Debug.Log($"Registered: {firstName} {lastName} | {email}");
 
-        // Show success popup
-        successPopup.SetActive(true);
+        // Show success message
+        messageText.text = "Register Success!";
     }
 }

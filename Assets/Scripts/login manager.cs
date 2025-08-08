@@ -9,13 +9,21 @@ public class LoginManager : MonoBehaviour
     public TMP_InputField usernameInput;
     public TMP_InputField passwordInput;
     public Button submitButton;
+    public Button registerButton; // ✅ Add this in Inspector
+    public TMP_Text messageText;
 
     [Header("Animation")]
-    public Animator loginAnimator; // ✅ Drag your LoginBox GameObject with Animator here
+    public Animator loginAnimator;
 
     void Start()
     {
+        // Clear message at start
+        if (messageText != null)
+            messageText.text = "";
+
+        // ✅ Assign button listeners in code
         submitButton.onClick.AddListener(OnSubmit);
+        registerButton.onClick.AddListener(GoToRegisterScene);
     }
 
     void OnSubmit()
@@ -23,24 +31,27 @@ public class LoginManager : MonoBehaviour
         string username = usernameInput.text.Trim();
         string password = passwordInput.text;
 
-        // ✅ Input validation
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
         {
-            Debug.LogWarning("Please fill in both fields.");
+            messageText.text = "Please fill in both fields.";
             return;
         }
 
-        Debug.Log($"Username: {username}, Password: {password}");
+        messageText.text = "Login Success!";
 
-        // ✅ Trigger "PopOut" animation
-        loginAnimator.SetTrigger("PopOut");
+        if (loginAnimator != null)
+            loginAnimator.SetTrigger("PopOut");
 
-        // ✅ Delay scene load to match animation duration
-        Invoke("LoadNextScene", 0.6f); // adjust time if animation is longer/shorter
+        Invoke(nameof(LoadNextScene), 0.6f); // Match animation length
     }
 
     void LoadNextScene()
     {
-        SceneManager.LoadScene("titlescene"); // ✅ Replace with your actual scene name
+        SceneManager.LoadScene("titlescene"); // Replace with your real scene name
+    }
+
+    public void GoToRegisterScene()
+    {
+        SceneManager.LoadScene("register"); // ✅ Replace with actual Register scene name
     }
 }
