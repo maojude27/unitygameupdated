@@ -1,6 +1,6 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class TitleScreenManager : MonoBehaviour
 {
@@ -9,12 +9,15 @@ public class TitleScreenManager : MonoBehaviour
 
     void Start()
     {
-        // Assign listener for the Play button
-        playButton.onClick.AddListener(GoToLoadingScreen);
+        if (playButton != null)
+        {
+            playButton.onClick.AddListener(OnPlayButton);
+        }
     }
 
-    void GoToLoadingScreen()
+    void OnPlayButton()
     {
-        SceneManager.LoadScene("loadingscreen"); //  Replace with your actual loading screen scene name
+        // Always go to LoadingScreen scene
+        SceneManager.LoadScene("loadingscreen");
     }
 }

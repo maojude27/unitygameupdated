@@ -17,7 +17,30 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/loadingscreen.unity
     guid: 948e4f8324c5bc043afb4e10afc8e07a
+  - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: b98a71939e886374ca36ad033cb5ca7c
+  - enabled: 1
+    path: Assets/Scenes/GameplayScene.unity
+    guid: 5082ce8a817e7564585aa0fe196610c4
+  - enabled: 1
+    path: Assets/Scenes/gameresult.unity
+    guid: 9698c2e3440a21d4389623b250255e7a
+  - enabled: 1
+    path: Assets/Scenes/classlist.unity
+    guid: c417930c7a2a64846bc041b400a19019
+  - enabled: 1
+    path: Assets/Scenes/GPenumeration.unity
+    guid: 477ba80f15a806546b84f6b846f594fd
+  - enabled: 1
+    path: Assets/Scenes/GPfillblank.unity
+    guid: 81d84b836aa708548a1f63636a9e4623
+  - enabled: 1
+    path: Assets/Scenes/GPyesno.unity
+    guid: 353cf468241c96f4c83643b8bc09b36c
   m_configObjects:
+    com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000, guid: bc38cd225c89364419619a96f9fbf82d, type: 2}
+    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: da23a4089b47ebf43af279870c8d78ab, type: 2}
     com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: 0c2cd6fdc93cae64ca042f6f1a5684eb, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

@@ -3,12 +3,13 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 using TMPro;
 
-public class RegisterManager : MonoBehaviour
+public class RegisterManagerSimple : MonoBehaviour
 {
     [Header("API Configuration")]
-    public string apiUrl = "http://127.0.0.1:5000/api/student/register";
+    public string apiUrl = "https://capstoneproject-jq2h.onrender.com/api/student/register";
 
     [Header("Input Fields")]
     public TMP_InputField firstNameInput;
@@ -17,25 +18,20 @@ public class RegisterManager : MonoBehaviour
     public TMP_InputField passwordInput;
     public TMP_InputField confirmPasswordInput;
 
-    [Header("Buttons")]
+    [Header("UI Elements")]
     public Button submitButton;
-
-    [Header("UI Message")]
+    public Button loginButton;
     public TMP_Text messageText;
-
-    [Header("Debug")]
-    public bool showDebugLogs = true;
 
     void Start()
     {
-        // Clear the message at start
         messageText.text = "";
-
-        // Assign submit button listener
-        submitButton.onClick.AddListener(OnRegister);
+        submitButton.onClick.AddListener(OnRegisterClick);
+        if (loginButton != null)
+            loginButton.onClick.AddListener(GoBackToLogin);
     }
 
-    void OnRegister()
+    void OnRegisterClick()
     {
         string firstName = firstNameInput.text.Trim();
         string lastName = lastNameInput.text.Trim();
@@ -57,117 +53,91 @@ public class RegisterManager : MonoBehaviour
             return;
         }
 
-        // Show loading message
-        ShowMessage("Creating student...", true);
-
-        // Disable submit button during registration
+        // Start registration
+        ShowMessage("Registering student...", true);
         submitButton.interactable = false;
-
-        // Start registration process
-        StartCoroutine(RegisterStudentToAPI(firstName, lastName, email));
+        StartCoroutine(RegisterStudentSimple(firstName, lastName, email));
     }
 
-    IEnumerator RegisterStudentToAPI(string firstName, string lastName, string email)
+    IEnumerator RegisterStudentSimple(string firstName, string lastName, string email)
     {
-        // Create student registration data - using dummy class code for now
-        var registrationData = new StudentRegistrationData
+        // Prepare data for the API
+        var studentData = new StudentRegistrationRequest
         {
             name = $"{firstName} {lastName}",
             email = email,
-            class_code = "2EK5QUY",  // Using existing class code temporarily
+            class_code = "2EK5QUY",
             device_id = SystemInfo.deviceUniqueIdentifier,
             grade_level = "Grade 1",
             avatar_url = ""
         };
 
-        string jsonData = JsonUtility.ToJson(registrationData);
+        string jsonData = JsonUtility.ToJson(studentData);
+        Debug.Log($"Sending data: {jsonData}");
 
-        if (showDebugLogs)
-        {
-            Debug.Log($"Sending registration data: {jsonData}");
-        }
-
+        // Use the same method that worked in NetworkTest
         using (UnityWebRequest request = new UnityWebRequest(apiUrl, "POST"))
         {
+            // Convert JSON string to bytes
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
+
+            // Set headers
             request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("Accept", "application/json");
+
+            request.timeout = 30;
+
+            Debug.Log($"Sending POST request to: {apiUrl}");
+            Debug.Log($"JSON payload: {jsonData}");
 
             yield return request.SendWebRequest();
 
-            // Re-enable submit button
             submitButton.interactable = true;
+
+            Debug.Log($"Request complete: {request.result}");
+            Debug.Log($"Response code: {request.responseCode}");
+            Debug.Log($"Error: {request.error}");
+            Debug.Log($"Response: {request.downloadHandler.text}");
 
             if (request.result == UnityWebRequest.Result.Success)
             {
                 try
                 {
-                    string responseText = request.downloadHandler.text;
-                    if (showDebugLogs)
-                    {
-                        Debug.Log($"Registration response: {responseText}");
-                    }
-
-                    var response = JsonUtility.FromJson<RegistrationResponse>(responseText);
+                    var response = JsonUtility.FromJson<StudentRegistrationReply>(request.downloadHandler.text);
 
                     if (response.status == "success")
                     {
-                        // Save student data locally
                         PlayerPrefs.SetInt("StudentID", response.student_id);
                         PlayerPrefs.SetString("StudentName", response.student_name);
                         PlayerPrefs.SetInt("TotalPoints", response.total_points);
                         PlayerPrefs.Save();
 
-                        ShowMessage($"Student created successfully! ID: {response.student_id}", true);
-
-                        if (showDebugLogs)
-                        {
-                            Debug.Log($"Student created successfully:");
-                            Debug.Log($"- Student ID: {response.student_id}");
-                            Debug.Log($"- Name: {response.student_name}");
-                            Debug.Log($"- Points: {response.total_points}");
-                        }
-
-                        // Clear form after successful registration
+                        ShowMessage($"Registration successful! Welcome {response.student_name}!", true);
                         ClearForm();
+
+                        Debug.Log($"Success: ID={response.student_id}, Name={response.student_name}");
                     }
                     else
                     {
-                        ShowMessage("Student creation failed. Please try again.", false);
+                        ShowMessage("Registration failed. Please try again.", false);
+                        Debug.LogError($"Server returned failure: {response.status}");
                     }
                 }
                 catch (Exception e)
                 {
                     ShowMessage("Error processing response.", false);
-                    if (showDebugLogs)
-                    {
-                        Debug.LogError($"JSON parsing error: {e.Message}");
-                        Debug.LogError($"Response was: {request.downloadHandler.text}");
-                    }
+                    Debug.LogError($"JSON error: {e.Message}");
+                    Debug.LogError($"Raw response: {request.downloadHandler.text}");
                 }
             }
             else
             {
-                string errorMessage = "Student creation failed";
-
-                if (request.responseCode == 400)
-                {
-                    errorMessage = "Invalid data. Please check all fields.";
-                }
-                else if (request.responseCode == 0)
-                {
-                    errorMessage = "Cannot connect to server. Please check your internet connection.";
-                }
-
-                ShowMessage(errorMessage, false);
-
-                if (showDebugLogs)
-                {
-                    Debug.LogError($"Registration failed: {request.error}");
-                    Debug.LogError($"Response Code: {request.responseCode}");
-                    Debug.LogError($"Response: {request.downloadHandler.text}");
-                }
+                ShowMessage($"Connection failed: {request.error}", false);
+                Debug.LogError($"Request failed: {request.error}");
+                Debug.LogError($"Response code: {request.responseCode}");
+                Debug.LogError($"Response body: {request.downloadHandler.text}");
             }
         }
     }
@@ -187,38 +157,28 @@ public class RegisterManager : MonoBehaviour
         confirmPasswordInput.text = "";
     }
 
-    // Data classes for JSON serialization
-    [System.Serializable]
-    public class StudentRegistrationData
+    public void GoBackToLogin()
     {
-        public string name;
-        public string email;
-        public string class_code;
-        public string device_id;
-        public string grade_level;
-        public string avatar_url;
+        SceneManager.LoadScene("login");
     }
+}
 
-    [System.Serializable]
-    public class RegistrationResponse
-    {
-        public string status;
-        public int student_id;
-        public string student_name;
-        public string class_name;
-        public int total_points;
-        public string message;
-    }
+[System.Serializable]
+public class StudentRegistrationRequest
+{
+    public string name;
+    public string email;
+    public string class_code;
+    public string device_id;
+    public string grade_level;
+    public string avatar_url;
+}
 
-    // Test button you can use
-    [ContextMenu("Test Registration")]
-    public void TestRegistration()
-    {
-        firstNameInput.text = "John";
-        lastNameInput.text = "Doe";
-        emailInput.text = "john.doe@test.com";
-        passwordInput.text = "password123";
-        confirmPasswordInput.text = "password123";
-        OnRegister();
-    }
+[System.Serializable]
+public class StudentRegistrationReply
+{
+    public string status;
+    public int student_id;
+    public string student_name;
+    public int total_points;
 }

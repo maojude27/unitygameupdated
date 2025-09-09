@@ -8,13 +8,14 @@ public class GoBackButton : MonoBehaviour
 
     void Start()
     {
-        // Add listener to the button
-        goBackButton.onClick.AddListener(OnGoBack);
+        if (goBackButton != null)
+            goBackButton.onClick.AddListener(OnGoBack);
+        else
+            Debug.LogWarning("Go Back Button not assigned in the Inspector.");
     }
 
     void OnGoBack()
     {
-        // Replace with the name of your login scene
-        SceneManager.LoadScene("login");
+        SceneManager.LoadScene("mainmenu"); // Make sure this scene name matches exactly
     }
 }
