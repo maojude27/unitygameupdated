@@ -27,7 +27,7 @@ public class ProfileLoader : MonoBehaviour
     public TMP_Text classNameText;
 
     [Header("Web App Connection")]
-    public string flaskURL = "https://capstoneproject-jq2h.onrender.com"; // Production Flask server URL
+    public string flaskURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
     // For local development, change to: "http://127.0.0.1:5000"
     public bool useWebAppData = true; // Toggle between web app and local data
     public int studentId = 1; // Set this to load specific student profile

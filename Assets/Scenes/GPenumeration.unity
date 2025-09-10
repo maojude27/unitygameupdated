@@ -3310,14 +3310,14 @@ MonoBehaviour:
   dialogueAt75: Almost done, stay focused!
   dialogueAt100: Congratulations, you did it!
   dialogueText: {fileID: 1404284952}
-  passingScorePercentage: 70
-  currentQuestion: 'Name 5 programming languages:'
+  passingScorePercentage: 0
+  currentQuestion: 
   clearAnswersAfterSubmission: 1
   clearDelay: 1
   questionText: {fileID: 1943865474}
-  enableClassroomMode: 1
+  enableClassroomMode: 0
   assignmentId: -1
-  serverURL: http://127.0.0.1:5000
+  serverURL: https://homequest-c3k7.onrender.com
   studentNameText: {fileID: 0}
   assignmentInfoText: {fileID: 0}
   classroomStatusText: {fileID: 0}
@@ -3330,7 +3330,7 @@ MonoBehaviour:
   minimumAnswersRequired: 3
   allowDuplicateAnswers: 0
   caseSensitiveAnswers: 0
-  flaskURL: http://localhost:8001
+  flaskURL: https://homequest-c3k7.onrender.com
   studentId: 1
 --- !u!4 &1501992083
 Transform:

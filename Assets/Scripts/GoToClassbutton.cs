@@ -12,7 +12,7 @@ public class GoToClassList : MonoBehaviour
     private string sessionTime = "2025-09-03 05:10:35";
 
     [Header("Web App Connection")]
-    public string flaskURL = "https://capstoneproject-jq2h.onrender.com"; // Production Flask server URL
+    public string flaskURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
     // For local development, change to: "http://127.0.0.1:5000"
     public int studentId = 1;
 

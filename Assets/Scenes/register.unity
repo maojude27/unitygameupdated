@@ -1495,7 +1495,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1361c0d78ad529b4e95f9ab3b783afc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  apiUrl: http://localhost:8001/api/student/register
+  apiUrl: https://homequest-c3k7.onrender.com/student/simple-register
   firstNameInput: {fileID: 292089082}
   lastNameInput: {fileID: 774521835}
   emailInput: {fileID: 1688202181}
@@ -1504,7 +1504,6 @@ MonoBehaviour:
   submitButton: {fileID: 1101216711}
   loginButton: {fileID: 1145270302}
   messageText: {fileID: 1080218474}
-  showDebugLogs: 1
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0

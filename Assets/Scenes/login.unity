@@ -1342,7 +1342,7 @@ MonoBehaviour:
   registerButton: {fileID: 714058391}
   messageText: {fileID: 1701442091}
   loginAnimator: {fileID: 1032203482}
-  flaskURL: http://localhost:8001
+  flaskURL: https://homequest-c3k7.onrender.com
 --- !u!4 &816559443
 Transform:
   m_ObjectHideFlags: 0

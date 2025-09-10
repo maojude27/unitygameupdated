@@ -968,7 +968,7 @@ MonoBehaviour:
   submitButton: {fileID: 1101216711}
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   selectedColor: {r: 0, g: 1, b: 0, a: 1}
-  flaskURL: http://localhost:8001
+  flaskURL: https://homequest-c3k7.onrender.com
   studentId: 1
 --- !u!4 &1109344540
 Transform:

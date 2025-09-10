@@ -6,10 +6,10 @@ using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-public class RegisterManagerSimple : MonoBehaviour
+public class RegisterManager : MonoBehaviour
 {
     [Header("API Configuration")]
-    public string apiUrl = "https://capstoneproject-jq2h.onrender.com/api/student/register";
+    public string apiUrl = "https://homequest-c3k7.onrender.com/student/simple-register";
 
     [Header("Input Fields")]
     public TMP_InputField firstNameInput;
@@ -56,26 +56,26 @@ public class RegisterManagerSimple : MonoBehaviour
         // Start registration
         ShowMessage("Registering student...", true);
         submitButton.interactable = false;
-        StartCoroutine(RegisterStudentSimple(firstName, lastName, email));
+        StartCoroutine(RegisterStudent(firstName, lastName, email));
     }
 
-    IEnumerator RegisterStudentSimple(string firstName, string lastName, string email)
+    IEnumerator RegisterStudent(string firstName, string lastName, string email)
     {
-        // Prepare data for the API
+        // Prepare data for simple registration (no class enrollment)
         var studentData = new StudentRegistrationRequest
         {
             name = $"{firstName} {lastName}",
             email = email,
-            class_code = "2EK5QUY",
+            password = passwordInput.text,
             device_id = SystemInfo.deviceUniqueIdentifier,
             grade_level = "Grade 1",
             avatar_url = ""
         };
 
         string jsonData = JsonUtility.ToJson(studentData);
-        Debug.Log($"Sending data: {jsonData}");
+        Debug.Log($"Sending registration data: {jsonData}");
 
-        // Use the same method that worked in NetworkTest
+        // Create POST request
         using (UnityWebRequest request = new UnityWebRequest(apiUrl, "POST"))
         {
             // Convert JSON string to bytes
@@ -90,7 +90,6 @@ public class RegisterManagerSimple : MonoBehaviour
             request.timeout = 30;
 
             Debug.Log($"Sending POST request to: {apiUrl}");
-            Debug.Log($"JSON payload: {jsonData}");
 
             yield return request.SendWebRequest();
 
@@ -109,6 +108,7 @@ public class RegisterManagerSimple : MonoBehaviour
 
                     if (response.status == "success")
                     {
+                        // Save student data to PlayerPrefs
                         PlayerPrefs.SetInt("StudentID", response.student_id);
                         PlayerPrefs.SetString("StudentName", response.student_name);
                         PlayerPrefs.SetInt("TotalPoints", response.total_points);
@@ -117,7 +117,10 @@ public class RegisterManagerSimple : MonoBehaviour
                         ShowMessage($"Registration successful! Welcome {response.student_name}!", true);
                         ClearForm();
 
-                        Debug.Log($"Success: ID={response.student_id}, Name={response.student_name}");
+                        Debug.Log($"Registration Success: ID={response.student_id}, Name={response.student_name}");
+
+                        // Optionally redirect to dashboard after successful registration
+                        // SceneManager.LoadScene("dashboard");
                     }
                     else
                     {
@@ -127,8 +130,8 @@ public class RegisterManagerSimple : MonoBehaviour
                 }
                 catch (Exception e)
                 {
-                    ShowMessage("Error processing response.", false);
-                    Debug.LogError($"JSON error: {e.Message}");
+                    ShowMessage("Error processing server response.", false);
+                    Debug.LogError($"JSON parsing error: {e.Message}");
                     Debug.LogError($"Raw response: {request.downloadHandler.text}");
                 }
             }
@@ -168,7 +171,7 @@ public class StudentRegistrationRequest
 {
     public string name;
     public string email;
-    public string class_code;
+    public string password;
     public string device_id;
     public string grade_level;
     public string avatar_url;

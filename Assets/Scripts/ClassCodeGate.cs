@@ -24,7 +24,7 @@ public class ClassCodeGate : MonoBehaviour
 
     [Header("Classroom Integration")]
     public bool enableClassroomMode = true;
-    public string serverURL = "https://capstoneproject-jq2h.onrender.com"; // Production Flask server URL
+    public string serverURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
     // For local development, change to: "http://127.0.0.1:5000"
 
     private const string CLASS_CODE_KEY = "ClassCodeEntered";
@@ -133,9 +133,9 @@ public class ClassCodeGate : MonoBehaviour
         if (submitButton != null)
             submitButton.interactable = false;
 
-        // Real Flask API call
-        string url = serverURL + "/api/join_class";
-        string jsonData = "{\"class_code\":\"" + classCode + "\",\"student_name\":\"Student\"}";
+        // Real FastAPI API call
+        string url = serverURL + "/student/join-class";
+        string jsonData = "{\"class_code\":\"" + classCode + "\",\"student_id\":" + PlayerPrefs.GetInt("StudentID", 1) + "}";
 
         UnityEngine.Networking.UnityWebRequest request = new UnityEngine.Networking.UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);

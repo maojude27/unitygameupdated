@@ -18,7 +18,7 @@ public class LoginManager : MonoBehaviour
     public Animator loginAnimator;
 
     [Header("Web App Connection")]
-    public string flaskURL = "https://capstoneproject-jq2h.onrender.com"; // Production Flask server URL
+    public string flaskURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
     // For local development, change to: "http://127.0.0.1:5000"
 
     void Start()
@@ -47,13 +47,13 @@ public class LoginManager : MonoBehaviour
         StartCoroutine(AttemptLogin(username, password));
     }
 
-    // Flask web app integration - Login authentication
+    // FastAPI web app integration - Login authentication
     private IEnumerator AttemptLogin(string username, string password)
     {
-        string url = flaskURL + "/api/login";
+        string url = flaskURL + "/student/login";
 
-        // Create JSON data for Flask
-        string jsonData = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
+        // Create JSON data for FastAPI
+        string jsonData = "{\"email\":\"" + username + "\",\"password\":\"" + password + "\"}";
 
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);

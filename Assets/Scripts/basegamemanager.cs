@@ -80,7 +80,7 @@ public abstract class BaseGameManager : MonoBehaviour
     [Header("Classroom Integration")]
     public bool enableClassroomMode = true;
     public int assignmentId = -1; // Set this to load specific assignment
-    public string serverURL = "https://capstoneproject-jq2h.onrender.com"; // Production Flask server URL
+    public string serverURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
     // For local development, change to: "http://127.0.0.1:5000"
     public TMP_Text studentNameText;
     public TMP_Text assignmentInfoText;
@@ -165,7 +165,7 @@ public abstract class BaseGameManager : MonoBehaviour
     {
         UpdateClassroomStatus("Loading assignment...", Color.yellow);
 
-        string url = serverURL + "/api/get_assignment";
+        string url = serverURL + "/assignment/" + assignmentId;
         UnityWebRequest request = UnityWebRequest.Get(url);
 
         yield return request.SendWebRequest();
@@ -231,8 +231,9 @@ public abstract class BaseGameManager : MonoBehaviour
     {
         UpdateClassroomStatus("Submitting to classroom...", Color.yellow);
 
-        string url = serverURL + "/api/submit_score";
-        string jsonData = "{\"score\":" + gameScore + ",\"assignment_id\":1,\"student_id\":1}";
+        string url = serverURL + "/submit/" + assignmentId;
+        int studentId = PlayerPrefs.GetInt("StudentID", 1);
+        string jsonData = "{\"answers\":[],\"total_score\":" + gameScore + ",\"student_id\":" + studentId + "}";
 
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);

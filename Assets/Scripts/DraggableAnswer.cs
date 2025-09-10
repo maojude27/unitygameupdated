@@ -16,7 +16,7 @@ public class DraggableAnswer : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     public bool returnOnInvalidDrop = true;
 
     [Header("Web App Connection")]
-    public string flaskURL = "https://capstoneproject-jq2h.onrender.com"; // Production Flask server URL
+    public string flaskURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
     // For local development, change to: "http://127.0.0.1:5000"
     public int assignmentId = 1;
     public int studentId = 1;
