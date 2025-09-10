@@ -22,7 +22,7 @@ public class GoToMainMenu : MonoBehaviour
     {
         // Send navigation event to Flask web app
         SendNavigationToFlask();
-
+        
         SceneManager.LoadScene(mainMenuSceneName);
     }
 
@@ -35,18 +35,18 @@ public class GoToMainMenu : MonoBehaviour
     private IEnumerator PostNavigationToFlask()
     {
         string url = flaskURL + "/api/navigation_event";
-
+        
         // Create JSON data for Flask
         string jsonData = "{\"student_id\":" + studentId + ",\"action\":\"go_to_main_menu\",\"scene\":\"" + mainMenuSceneName + "\"}";
-
+        
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-
+        
         yield return request.SendWebRequest();
-
+        
         request.Dispose();
     }
 }

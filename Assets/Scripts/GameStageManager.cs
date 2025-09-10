@@ -50,27 +50,21 @@ public class GameStageManager : MonoBehaviour
     public TMP_Text answersDisplayText;
     public TMP_Text inputFeedbackText;
     public TMP_Text questionText;
+    public int maxAnswers = 5;
+    public int minimumAnswersRequired = 3;
+    public bool allowDuplicateAnswers = false;
+    public bool caseSensitiveAnswers = false;
 
     [Header("Multiple Choice Components (Scene-Specific)")]
     public List<Toggle> answerToggles = new List<Toggle>();
     public Button submitToggleButton;
     public TMP_Text multipleChoiceFeedbackText;
 
-    [Header("Game Settings - Now Dynamic")]
+    [Header("Game Settings")]
     public float passingScorePercentage = 70f;
-    public string currentQuestion = "Loading question...";
+    public string currentQuestion = "Name 5 programming languages:";
     public bool clearAnswersAfterSubmission = true;
     public float clearDelay = 1f;
-    public int maxAnswers = 5;
-    public int minimumAnswersRequired = 3;
-    public bool allowDuplicateAnswers = false;
-    public bool caseSensitiveAnswers = false;
-
-    [Header("Dynamic Question System")]
-    public string questionCategory = "Programming";
-    public int questionDifficultyLevel = 1;
-    public int questionsPerSession = 3;
-    public bool useRandomQuestions = true;
 
     [Header("Progress UI")]
     public Slider progressBar;
@@ -86,7 +80,8 @@ public class GameStageManager : MonoBehaviour
     public TMP_Text dialogueText;
 
     [Header("Flask Integration")]
-    public string flaskURL = "https://homequest-c3k7.onrender.com";
+    public string flaskURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
+    // For local development, change to: "http://127.0.0.1:5000"
     public bool sendToFlask = true;
     public int studentId = 1;
     public int assignmentId = 1;
@@ -98,16 +93,12 @@ public class GameStageManager : MonoBehaviour
     private List<string> submittedAnswers = new List<string>();
     private HashSet<string> correctAnswers = new HashSet<string>();
 
-    // Dynamic question system
-    private QuestionManager questionManager;
-    private QuestionData currentQuestionData;
-
     // Scene detection
     private bool hasInputFieldComponents = false;
     private bool hasDragDropComponents = false;
     private bool hasMultipleChoiceComponents = false;
 
-    // User session info
+    // User session info - UPDATED
     private string currentUser = "aldrinivanmiole-cell";
     private string sessionTime = "2025-09-02 22:56:40";
 
@@ -118,12 +109,11 @@ public class GameStageManager : MonoBehaviour
 
     private void InitializeGame()
     {
-        Debug.Log("=== DYNAMIC MOBILE GAME INITIALIZATION ===");
+        Debug.Log("=== MOBILE GAME INITIALIZATION ===");
         Debug.Log($"Scene: {SceneManager.GetActiveScene().name}");
         Debug.Log($"Game Mode: {gameMode}");
         Debug.Log($"User: {currentUser} | Session: {sessionTime} UTC");
         Debug.Log($"Platform: {Application.platform} | Mobile: {Application.isMobilePlatform}");
-        Debug.Log($"Dynamic Questions: Category={questionCategory}, Difficulty={questionDifficultyLevel}");
 
         // Store original position with safety check
         if (player != null)
@@ -153,13 +143,11 @@ public class GameStageManager : MonoBehaviour
         // Setup game components
         AssignPlayerSprite();
         AssignEnemySprite();
+        InitializeTemporaryAnswers();
 
         // Detect what components exist in this scene and setup accordingly
         DetectSceneComponents();
         SetupSceneSpecificComponents();
-
-        // Initialize dynamic question system
-        InitializeDynamicQuestionSystem();
 
         UpdateUI();
         ShowDialogueForProgress();
@@ -168,190 +156,20 @@ public class GameStageManager : MonoBehaviour
         if (playerSpeechBubble) playerSpeechBubble.SetActive(false);
         if (enemySpeechBubble) enemySpeechBubble.SetActive(false);
 
-        Debug.Log("=== DYNAMIC MOBILE INITIALIZATION COMPLETE ===");
+        // Set up the question
+        if (questionText != null)
+        {
+            questionText.text = currentQuestion;
+        }
+
+        // Send game initialization to Flask
+        if (sendToFlask)
+        {
+            StartCoroutine(SendGameInitToFlask());
+        }
+
+        Debug.Log("=== MOBILE INITIALIZATION COMPLETE ===");
         LogSceneComponentStatus();
-    }
-
-    private void InitializeDynamicQuestionSystem()
-    {
-        Debug.Log("=== INITIALIZING DYNAMIC QUESTION SYSTEM ===");
-
-        // Find or create QuestionManager
-        questionManager = FindObjectOfType<QuestionManager>();
-        if (questionManager == null)
-        {
-            GameObject questionManagerGO = new GameObject("QuestionManager");
-            questionManager = questionManagerGO.AddComponent<QuestionManager>();
-            Debug.Log("Created new QuestionManager instance");
-        }
-
-        // Configure QuestionManager
-        questionManager.SetCategory(questionCategory);
-        questionManager.SetDifficultyLevel(questionDifficultyLevel);
-        questionManager.SetQuestionsPerSession(questionsPerSession);
-
-        // Start loading questions
-        StartCoroutine(WaitForQuestionManagerInitialization());
-    }
-
-    private IEnumerator WaitForQuestionManagerInitialization()
-    {
-        Debug.Log("Waiting for QuestionManager to load questions...");
-        
-        // Wait a frame to ensure QuestionManager Start() has run
-        yield return new WaitForEndOfFrame();
-        
-        // Wait for questions to be loaded
-        float waitTime = 0f;
-        const float maxWaitTime = 10f;
-        
-        while (questionManager.GetCurrentQuestion() == null && waitTime < maxWaitTime)
-        {
-            waitTime += Time.deltaTime;
-            yield return null;
-        }
-        
-        if (questionManager.GetCurrentQuestion() != null)
-        {
-            Debug.Log("Questions loaded successfully!");
-            OnQuestionsLoaded();
-        }
-        else
-        {
-            Debug.LogError("Failed to load questions within timeout period");
-            // Fallback to static question
-            SetFallbackQuestion();
-        }
-    }
-
-    private void OnQuestionsLoaded()
-    {
-        currentQuestionData = questionManager.GetCurrentQuestion();
-        if (currentQuestionData != null)
-        {
-            Debug.Log($"Loaded dynamic question: {currentQuestionData.questionText}");
-            ApplyCurrentQuestion();
-        }
-        else
-        {
-            Debug.LogWarning("No current question available, using fallback");
-            SetFallbackQuestion();
-        }
-    }
-
-    private void SetFallbackQuestion()
-    {
-        Debug.Log("Setting fallback static question");
-        currentQuestion = "Name 3 programming languages:";
-        maxAnswers = 3;
-        minimumAnswersRequired = 2;
-        passingScorePercentage = 60f;
-        
-        // Set fallback correct answers
-        correctAnswers.Clear();
-        string[] fallbackAnswers = {"python", "javascript", "java", "c#", "c++", "html", "css"};
-        foreach (string answer in fallbackAnswers)
-        {
-            correctAnswers.Add(answer.ToLower());
-        }
-        
-        // Update UI
-        if (questionText != null)
-        {
-            questionText.text = currentQuestion;
-        }
-        
-        Debug.Log($"Fallback question set: {currentQuestion}");
-    }
-
-    private void ApplyCurrentQuestion()
-    {
-        if (currentQuestionData == null)
-        {
-            Debug.LogWarning("No current question data to apply");
-            return;
-        }
-
-        // Apply question settings
-        currentQuestion = currentQuestionData.questionText;
-        maxAnswers = currentQuestionData.maxAnswers;
-        minimumAnswersRequired = currentQuestionData.minimumAnswersRequired;
-        allowDuplicateAnswers = currentQuestionData.allowDuplicateAnswers;
-        caseSensitiveAnswers = currentQuestionData.caseSensitiveAnswers;
-        passingScorePercentage = currentQuestionData.passingScorePercentage;
-
-        // Update correct answers
-        UpdateCorrectAnswers(currentQuestionData.correctAnswers);
-
-        // Update question text in UI
-        if (questionText != null)
-        {
-            questionText.text = currentQuestion;
-        }
-
-        // Setup multiple choice options if applicable
-        if (currentQuestionData.questionType == "multiple_choice" && hasMultipleChoiceComponents)
-        {
-            SetupMultipleChoiceOptions();
-        }
-
-        Debug.Log($"Applied dynamic question: {currentQuestion}");
-        Debug.Log($"Correct answers count: {correctAnswers.Count}");
-        Debug.Log($"Question type: {currentQuestionData.questionType}");
-    }
-
-    private void SetupMultipleChoiceOptions()
-    {
-        if (answerToggles == null || answerToggles.Count == 0 || currentQuestionData == null)
-        {
-            Debug.LogWarning("Cannot setup multiple choice - missing components or question data");
-            return;
-        }
-
-        // Clear existing selections
-        foreach (var toggle in answerToggles)
-        {
-            if (toggle != null)
-            {
-                toggle.isOn = false;
-            }
-        }
-
-        // Apply options to toggles
-        for (int i = 0; i < answerToggles.Count && i < currentQuestionData.multipleChoiceOptions.Count; i++)
-        {
-            var toggle = answerToggles[i];
-            if (toggle != null)
-            {
-                var toggleText = toggle.GetComponentInChildren<TMP_Text>();
-                if (toggleText != null)
-                {
-                    toggleText.text = currentQuestionData.multipleChoiceOptions[i];
-                    toggle.gameObject.SetActive(true);
-                }
-            }
-        }
-
-        // Hide unused toggles
-        for (int i = currentQuestionData.multipleChoiceOptions.Count; i < answerToggles.Count; i++)
-        {
-            if (answerToggles[i] != null)
-            {
-                answerToggles[i].gameObject.SetActive(false);
-            }
-        }
-
-        Debug.Log($"Setup {currentQuestionData.multipleChoiceOptions.Count} multiple choice options");
-    }
-
-    public void UpdateCorrectAnswers(List<string> newCorrectAnswers)
-    {
-        correctAnswers.Clear();
-        foreach (string answer in newCorrectAnswers)
-        {
-            correctAnswers.Add(caseSensitiveAnswers ? answer : answer.ToLower());
-        }
-        Debug.Log($"Updated correct answers: {correctAnswers.Count} answers loaded");
     }
 
     private void DetectSceneComponents()
@@ -420,6 +238,29 @@ public class GameStageManager : MonoBehaviour
             Debug.Log($"  Answer Toggles: {answerToggles.Count}");
             Debug.Log($"  Feedback Text: {(multipleChoiceFeedbackText != null ? "OK Assigned" : "NULL")}");
         }
+    }
+
+    private void InitializeTemporaryAnswers()
+    {
+        // TEMPORARY ANSWERS - Will be replaced with API endpoints and database integration
+        correctAnswers.Clear();
+
+        string[] programmingLanguages = {
+            "python", "javascript", "c#", "java", "c++",
+            "ruby", "go", "swift", "php", "kotlin",
+            "typescript", "rust", "dart", "scala", "perl",
+            "html", "css", "sql", "r", "matlab",
+            "c", "objective-c", "shell", "powershell", "bash",
+            "vb.net", "f#", "haskell", "lua", "assembly",
+            "cobol", "fortran", "pascal", "delphi", "prolog"
+        };
+
+        foreach (string lang in programmingLanguages)
+        {
+            correctAnswers.Add(lang.ToLower());
+        }
+
+        Debug.Log($"Loaded {correctAnswers.Count} temporary correct answers (to be replaced with database)");
     }
 
     #region Input Field Components Setup - MOBILE OPTIMIZED
@@ -566,14 +407,19 @@ public class GameStageManager : MonoBehaviour
 
     public void SubmitToggleAnswers()
     {
-        Debug.Log("=== MOBILE SUBMITTING TOGGLE ANSWERS - DYNAMIC VERSION ===");
+        Debug.Log("=== MOBILE SUBMITTING TOGGLE ANSWERS - BULLETPROOF VERSION ===");
 
+        // BULLETPROOF VALIDATION - Multiple layers of checking
+
+        // CHECK 1: Scene components validation
         if (!hasMultipleChoiceComponents)
         {
             Debug.LogError("CRITICAL ERROR: SubmitToggleAnswers called but this scene doesn't have multiple choice components!");
+            Debug.LogError("This should not happen - check your UI setup");
             return;
         }
 
+        // CHECK 2: Processing state validation
         if (isProcessingAttack)
         {
             Debug.LogWarning("Cannot submit toggles - attack in progress");
@@ -581,12 +427,14 @@ public class GameStageManager : MonoBehaviour
             return;
         }
 
+        // CHECK 3: Button validation
         if (submitToggleButton == null)
         {
             Debug.LogError("CRITICAL ERROR: Submit toggle button is null but method was called!");
             return;
         }
 
+        // CHECK 4: Toggle collection validation
         if (answerToggles == null || answerToggles.Count == 0)
         {
             Debug.LogError("CRITICAL ERROR: No toggle collection found!");
@@ -596,7 +444,6 @@ public class GameStageManager : MonoBehaviour
 
         // COUNT SELECTED ANSWERS WITH DETAILED LOGGING
         List<string> selectedAnswers = new List<string>();
-        List<int> selectedIndices = new List<int>();
         int totalToggles = 0;
         int activeToggles = 0;
         int selectedToggles = 0;
@@ -617,7 +464,6 @@ public class GameStageManager : MonoBehaviour
                     if (toggle.isOn)
                     {
                         selectedToggles++;
-                        selectedIndices.Add(i);
                         TMP_Text toggleText = toggle.GetComponentInChildren<TMP_Text>();
                         if (toggleText != null)
                         {
@@ -648,17 +494,22 @@ public class GameStageManager : MonoBehaviour
         Debug.Log($"Toggle scan complete: {selectedToggles}/{activeToggles} active toggles selected (Total: {totalToggles})");
         Debug.Log($"Selected answers collected: {selectedAnswers.Count}");
 
+        // BULLETPROOF CHECK: Multiple validation for no selections
         bool hasNoSelections = (selectedToggles == 0) || (selectedAnswers.Count == 0);
 
         if (hasNoSelections)
         {
             Debug.LogWarning("No answers selected in mobile multiple choice!");
+            Debug.LogWarning($"Validation details: selectedToggles={selectedToggles}, selectedAnswers.Count={selectedAnswers.Count}");
             ShowMultipleChoiceFeedback("Please select at least one answer!", false);
-            return;
+            Debug.LogWarning("EXITING SubmitToggleAnswers - no selections found - METHOD TERMINATED");
+            return; // CRITICAL: This MUST exit the method
         }
 
-        // Calculate score using dynamic question system
-        float scorePercentage = CalculateDynamicMultipleChoiceScore(selectedIndices);
+        // If we reach here, we have valid selections
+        Debug.Log($"VALIDATION PASSED: Processing {selectedAnswers.Count} mobile selected answers");
+
+        float scorePercentage = CalculateMultipleChoiceScore(selectedAnswers);
         string allAnswers = string.Join(", ", selectedAnswers);
 
         Debug.Log($"Mobile multiple choice submission: {selectedAnswers.Count} answers, {scorePercentage:F1}% score");
@@ -673,26 +524,26 @@ public class GameStageManager : MonoBehaviour
         StartCoroutine(HandleMultipleAnswerAttack(allAnswers, scorePercentage));
     }
 
-    private float CalculateDynamicMultipleChoiceScore(List<int> selectedIndices)
+    private float CalculateMultipleChoiceScore(List<string> selectedAnswers)
     {
-        if (selectedIndices.Count == 0) return 0f;
+        if (selectedAnswers.Count == 0) return 0f;
 
-        // If we have dynamic question data, use it
-        if (currentQuestionData != null && currentQuestionData.questionType == "multiple_choice")
-        {
-            return questionManager.CalculateMultipleChoiceScore(selectedIndices);
-        }
-
-        // Fallback to basic calculation
         int correctCount = 0;
-        foreach (int index in selectedIndices)
+        foreach (string answer in selectedAnswers)
         {
-            // For fallback, assume first few options are correct (this should rarely be used)
-            if (index < 4) correctCount++;
+            if (correctAnswers.Contains(answer.ToLower()))
+            {
+                correctCount++;
+                Debug.Log($"Correct mobile multiple choice answer: {answer}");
+            }
+            else
+            {
+                Debug.Log($"Incorrect mobile multiple choice answer: {answer}");
+            }
         }
 
-        float percentage = (float)correctCount / selectedIndices.Count * 100f;
-        Debug.Log($"Fallback multiple choice score: {correctCount}/{selectedIndices.Count} = {percentage:F1}%");
+        float percentage = (float)correctCount / selectedAnswers.Count * 100f;
+        Debug.Log($"Mobile multiple choice score: {correctCount}/{selectedAnswers.Count} = {percentage:F1}%");
         return percentage;
     }
 
@@ -707,7 +558,7 @@ public class GameStageManager : MonoBehaviour
     }
     #endregion
 
-    #region Input Field Methods - MOBILE OPTIMIZED WITH DYNAMIC QUESTIONS
+    #region Input Field Methods - MOBILE OPTIMIZED
     private void OnMobileInputFieldEndEdit(string input)
     {
         Debug.Log($"Mobile OnInputFieldEndEdit called with input: '{input}'");
@@ -716,7 +567,7 @@ public class GameStageManager : MonoBehaviour
 
     public void SubmitCurrentAnswer()
     {
-        Debug.Log("=== MOBILE SUBMIT CURRENT ANSWER CALLED - DYNAMIC VERSION ===");
+        Debug.Log("=== MOBILE SUBMIT CURRENT ANSWER CALLED ===");
 
         if (!hasInputFieldComponents)
         {
@@ -937,7 +788,7 @@ public class GameStageManager : MonoBehaviour
 
     public void SubmitAllInputAnswers()
     {
-        Debug.Log("=== MOBILE SUBMITTING ALL INPUT ANSWERS - DYNAMIC VERSION ===");
+        Debug.Log("=== MOBILE SUBMITTING ALL INPUT ANSWERS ===");
 
         if (submittedAnswers.Count < minimumAnswersRequired)
         {
@@ -946,7 +797,7 @@ public class GameStageManager : MonoBehaviour
             return;
         }
 
-        float scorePercentage = CalculateDynamicScorePercentage();
+        float scorePercentage = CalculateScorePercentage();
         string allAnswers = string.Join(", ", submittedAnswers);
 
         Debug.Log($"Submitting {submittedAnswers.Count} mobile answers with {scorePercentage:F1}% score");
@@ -960,14 +811,14 @@ public class GameStageManager : MonoBehaviour
         StartCoroutine(HandleMultipleAnswerAttack(allAnswers, scorePercentage));
     }
 
-    private float CalculateDynamicScorePercentage()
+    private float CalculateScorePercentage()
     {
         if (submittedAnswers.Count == 0) return 0f;
 
         int correctCount = 0;
         foreach (string answer in submittedAnswers)
         {
-            if (IsDynamicAnswerCorrect(answer))
+            if (correctAnswers.Contains(answer.ToLower()))
             {
                 correctCount++;
                 Debug.Log($"Correct mobile answer: {answer}");
@@ -981,19 +832,6 @@ public class GameStageManager : MonoBehaviour
         float percentage = (float)correctCount / submittedAnswers.Count * 100f;
         Debug.Log($"Mobile score calculation: {correctCount}/{submittedAnswers.Count} = {percentage:F1}%");
         return percentage;
-    }
-
-    private bool IsDynamicAnswerCorrect(string answer)
-    {
-        // Use QuestionManager if available
-        if (questionManager != null)
-        {
-            return questionManager.IsAnswerCorrect(answer);
-        }
-
-        // Fallback to static correctAnswers
-        string normalizedAnswer = caseSensitiveAnswers ? answer : answer.ToLower();
-        return correctAnswers.Contains(normalizedAnswer);
     }
 
     private void ShowInputFeedback(string message, bool isPositive)
@@ -1029,7 +867,7 @@ public class GameStageManager : MonoBehaviour
 
         yield return StartCoroutine(ShowSpeechBubble(playerSpeechBubble, playerSpeechText, $"I choose: {answer}", 1.5f));
 
-        bool isCorrect = IsDynamicAnswerCorrect(answer);
+        bool isCorrect = correctAnswers.Contains(answer.ToLower());
         string resultText = isCorrect ? "Correct! Well done!" : "Wrong! Try again!";
 
         yield return StartCoroutine(ShowSpeechBubble(enemySpeechBubble, enemySpeechText, resultText, 2f));
@@ -1103,13 +941,7 @@ public class GameStageManager : MonoBehaviour
             }
         }
 
-        // Check if there are more questions
-        if (questionManager != null && questionManager.HasMoreQuestions())
-        {
-            yield return new WaitForSeconds(clearDelay);
-            LoadNextQuestion();
-        }
-        else if (clearAnswersAfterSubmission)
+        if (clearAnswersAfterSubmission)
         {
             yield return new WaitForSeconds(clearDelay);
 
@@ -1134,95 +966,52 @@ public class GameStageManager : MonoBehaviour
         isProcessingAttack = false;
         UpdateComponentStates();
     }
-
-    private void LoadNextQuestion()
-    {
-        Debug.Log("=== LOADING NEXT QUESTION ===");
-        
-        if (questionManager != null)
-        {
-            questionManager.NextQuestion();
-            currentQuestionData = questionManager.GetCurrentQuestion();
-            
-            if (currentQuestionData != null)
-            {
-                // Clear previous answers
-                submittedAnswers.Clear();
-                
-                // Apply new question
-                ApplyCurrentQuestion();
-                
-                // Clear UI elements
-                if (hasInputFieldComponents)
-                {
-                    if (answerInputField != null) answerInputField.text = "";
-                    UpdateAnswersDisplay();
-                    ShowInputFeedback("New question loaded! Enter your answers:", true);
-                }
-                
-                if (hasMultipleChoiceComponents)
-                {
-                    foreach (var toggle in answerToggles)
-                    {
-                        if (toggle != null) toggle.isOn = false;
-                    }
-                    ShowMultipleChoiceFeedback("New question loaded! Select your answers:", true);
-                }
-                
-                Debug.Log($"Next question loaded: {currentQuestionData.questionText}");
-            }
-            else
-            {
-                Debug.Log("No more questions available - session complete");
-            }
-        }
-    }
     #endregion
 
     #region Flask Integration Methods
     private IEnumerator SendGameInitToFlask()
     {
-        string jsonData = "{\"action\":\"game_init\",\"scene\":\"" + SceneManager.GetActiveScene().name + "\",\"game_mode\":\"" + gameMode.ToString() + "\",\"student_id\":" + studentId + ",\"question_category\":\"" + questionCategory + "\",\"difficulty_level\":" + questionDifficultyLevel + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-
+        string jsonData = "{\"action\":\"game_init\",\"scene\":\"" + SceneManager.GetActiveScene().name + "\",\"game_mode\":\"" + gameMode.ToString() + "\",\"student_id\":" + studentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
+        
         yield return StartCoroutine(SendDataToFlask("/api/game_event", jsonData));
     }
 
     private IEnumerator SendSingleAnswerToFlask(string answer)
     {
-        bool isCorrect = IsDynamicAnswerCorrect(answer);
-        string jsonData = "{\"action\":\"single_answer\",\"answer\":\"" + answer + "\",\"is_correct\":" + isCorrect.ToString().ToLower() + ",\"question_id\":" + (currentQuestionData?.questionId ?? 0) + ",\"student_id\":" + studentId + ",\"assignment_id\":" + assignmentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-
+        bool isCorrect = correctAnswers.Contains(answer.ToLower());
+        string jsonData = "{\"action\":\"single_answer\",\"answer\":\"" + answer + "\",\"is_correct\":" + isCorrect.ToString().ToLower() + ",\"student_id\":" + studentId + ",\"assignment_id\":" + assignmentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
+        
         yield return StartCoroutine(SendDataToFlask("/api/game_answer", jsonData));
     }
 
     private IEnumerator SendInputAnswerToFlask(string answer)
     {
-        bool isCorrect = IsDynamicAnswerCorrect(answer);
-        string jsonData = "{\"action\":\"input_answer\",\"answer\":\"" + answer + "\",\"is_correct\":" + isCorrect.ToString().ToLower() + ",\"total_answers\":" + submittedAnswers.Count + ",\"question_id\":" + (currentQuestionData?.questionId ?? 0) + ",\"student_id\":" + studentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-
+        bool isCorrect = correctAnswers.Contains(answer.ToLower());
+        string jsonData = "{\"action\":\"input_answer\",\"answer\":\"" + answer + "\",\"is_correct\":" + isCorrect.ToString().ToLower() + ",\"total_answers\":" + submittedAnswers.Count + ",\"student_id\":" + studentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
+        
         yield return StartCoroutine(SendDataToFlask("/api/game_answer", jsonData));
     }
 
     private IEnumerator SendMultipleChoiceToFlask(List<string> answers, float score)
     {
         string answersJson = "[\"" + string.Join("\",\"", answers) + "\"]";
-        string jsonData = "{\"action\":\"multiple_choice\",\"answers\":" + answersJson + ",\"score\":" + score + ",\"question_id\":" + (currentQuestionData?.questionId ?? 0) + ",\"student_id\":" + studentId + ",\"assignment_id\":" + assignmentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-
+        string jsonData = "{\"action\":\"multiple_choice\",\"answers\":" + answersJson + ",\"score\":" + score + ",\"student_id\":" + studentId + ",\"assignment_id\":" + assignmentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
+        
         yield return StartCoroutine(SendDataToFlask("/api/game_answer", jsonData));
     }
 
     private IEnumerator SendAllInputAnswersToFlask(List<string> answers, float score)
     {
         string answersJson = "[\"" + string.Join("\",\"", answers) + "\"]";
-        string jsonData = "{\"action\":\"submit_all_input\",\"answers\":" + answersJson + ",\"score\":" + score + ",\"question_id\":" + (currentQuestionData?.questionId ?? 0) + ",\"student_id\":" + studentId + ",\"assignment_id\":" + assignmentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-
+        string jsonData = "{\"action\":\"submit_all_input\",\"answers\":" + answersJson + ",\"score\":" + score + ",\"student_id\":" + studentId + ",\"assignment_id\":" + assignmentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
+        
         yield return StartCoroutine(SendDataToFlask("/api/game_answer", jsonData));
     }
 
     private IEnumerator SendClearAnswersToFlask(int clearedCount)
     {
-        string jsonData = "{\"action\":\"clear_answers\",\"cleared_count\":" + clearedCount + ",\"question_id\":" + (currentQuestionData?.questionId ?? 0) + ",\"student_id\":" + studentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-
+        string jsonData = "{\"action\":\"clear_answers\",\"cleared_count\":" + clearedCount + ",\"student_id\":" + studentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
+        
         yield return StartCoroutine(SendDataToFlask("/api/game_event", jsonData));
     }
 
@@ -1233,9 +1022,9 @@ public class GameStageManager : MonoBehaviour
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-
+        
         yield return request.SendWebRequest();
-
+        
         if (request.result == UnityWebRequest.Result.Success)
         {
             Debug.Log("Successfully sent data to Flask: " + endpoint);
@@ -1244,7 +1033,7 @@ public class GameStageManager : MonoBehaviour
         {
             Debug.LogWarning("Failed to send data to Flask: " + request.error);
         }
-
+        
         request.Dispose();
     }
     #endregion
@@ -1360,8 +1149,8 @@ public class GameStageManager : MonoBehaviour
 
     private IEnumerator SendProgressToFlask(float currentProgress, float addedValue)
     {
-        string jsonData = "{\"action\":\"progress_update\",\"current_progress\":" + currentProgress + ",\"added_value\":" + addedValue + ",\"question_id\":" + (currentQuestionData?.questionId ?? 0) + ",\"student_id\":" + studentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-
+        string jsonData = "{\"action\":\"progress_update\",\"current_progress\":" + currentProgress + ",\"added_value\":" + addedValue + ",\"student_id\":" + studentId + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
+        
         yield return StartCoroutine(SendDataToFlask("/api/game_progress", jsonData));
     }
 
@@ -1418,13 +1207,13 @@ public class GameStageManager : MonoBehaviour
 
     private IEnumerator SendGameCompletionToFlask(int finalScore)
     {
-        string jsonData = "{\"action\":\"game_completion\",\"final_score\":" + finalScore + ",\"questions_completed\":" + (questionManager?.GetCurrentQuestionIndex() ?? 0) + ",\"student_id\":" + studentId + ",\"assignment_id\":" + assignmentId + ",\"scene\":\"" + SceneManager.GetActiveScene().name + "\",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-
+        string jsonData = "{\"action\":\"game_completion\",\"final_score\":" + finalScore + ",\"student_id\":" + studentId + ",\"assignment_id\":" + assignmentId + ",\"scene\":\"" + SceneManager.GetActiveScene().name + "\",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
+        
         yield return StartCoroutine(SendDataToFlask("/api/game_completion", jsonData));
     }
     #endregion
 
-    #region Public Methods & Dynamic Question System Integration
+    #region Public Methods & Database Integration Points
     public void RestartGame()
     {
         progress = 0f;
@@ -1437,17 +1226,11 @@ public class GameStageManager : MonoBehaviour
             StartCoroutine(SendGameRestartToFlask());
         }
 
-        // Restart question system
-        if (questionManager != null)
-        {
-            StartCoroutine(questionManager.LoadQuestions());
-        }
-
         UpdateUI();
         if (hasInputFieldComponents)
         {
             UpdateAnswersDisplay();
-            ShowInputFeedback("Game restarted! Loading new questions...", true);
+            ShowInputFeedback("Game restarted! Tap to enter your answers:", true);
         }
 
         if (hasMultipleChoiceComponents)
@@ -1456,7 +1239,7 @@ public class GameStageManager : MonoBehaviour
             {
                 if (toggle != null) toggle.isOn = false;
             }
-            ShowMultipleChoiceFeedback("Game restarted! Loading new questions...", true);
+            ShowMultipleChoiceFeedback("Game restarted! Tap to select your answers:", true);
         }
 
         ShowDialogueForProgress();
@@ -1466,93 +1249,76 @@ public class GameStageManager : MonoBehaviour
 
     private IEnumerator SendGameRestartToFlask()
     {
-        string jsonData = "{\"action\":\"game_restart\",\"student_id\":" + studentId + ",\"scene\":\"" + SceneManager.GetActiveScene().name + "\",\"category\":\"" + questionCategory + "\",\"difficulty\":" + questionDifficultyLevel + ",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-
+        string jsonData = "{\"action\":\"game_restart\",\"student_id\":" + studentId + ",\"scene\":\"" + SceneManager.GetActiveScene().name + "\",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
+        
         yield return StartCoroutine(SendDataToFlask("/api/game_event", jsonData));
     }
 
-    // Public API for external configuration
-    public void SetQuestionCategory(string category)
+    [System.Obsolete("This is temporary - replace with API endpoint")]
+    public void LoadAnswersFromDatabase()
     {
-        questionCategory = category;
-        if (questionManager != null)
+        Debug.Log("=== TEMPORARY METHOD - TO BE REPLACED ===");
+        Debug.Log($"Mobile Scene: {SceneManager.GetActiveScene().name} | User: {currentUser}");
+        InitializeTemporaryAnswers();
+    }
+
+    [System.Obsolete("This is temporary - replace with API endpoint")]
+    public void SubmitScoreToDatabase(int score, string answers)
+    {
+        Debug.Log("=== TEMPORARY METHOD - TO BE REPLACED ===");
+        Debug.Log($"Mobile Score: {score}, Answers: {answers}, User: {currentUser}");
+        Debug.Log($"Timestamp: {sessionTime} UTC");
+    }
+
+    [ContextMenu("Test Mobile Multiple Choice Validation")]
+    public void TestMultipleChoiceValidation()
+    {
+        Debug.Log("=== TESTING MOBILE MULTIPLE CHOICE VALIDATION ===");
+        Debug.Log($"Has MC Components: {hasMultipleChoiceComponents}");
+        Debug.Log($"Submit Toggle Button: {submitToggleButton != null}");
+        Debug.Log($"Toggles Count: {answerToggles.Count}");
+        Debug.Log($"Is Processing Attack: {isProcessingAttack}");
+        Debug.Log($"Platform: {Application.platform} | Mobile: {Application.isMobilePlatform}");
+
+        if (answerToggles != null)
         {
-            questionManager.SetCategory(category);
+            for (int i = 0; i < answerToggles.Count; i++)
+            {
+                Toggle toggle = answerToggles[i];
+                if (toggle != null)
+                {
+                    Debug.Log($"Toggle {i}: Active={toggle.gameObject.activeInHierarchy}, Selected={toggle.isOn}");
+                }
+                else
+                {
+                    Debug.Log($"Toggle {i}: NULL");
+                }
+            }
         }
-        Debug.Log($"Question category set to: {category}");
     }
+    #endregion
 
-    public void SetQuestionDifficulty(int difficulty)
+    #region Question Management
+    // Method to update correct answers from QuestionManager
+    public void UpdateCorrectAnswers(List<string> newCorrectAnswers)
     {
-        questionDifficultyLevel = difficulty;
-        if (questionManager != null)
-        {
-            questionManager.SetDifficultyLevel(difficulty);
-        }
-        Debug.Log($"Question difficulty set to: {difficulty}");
-    }
-
-    public void SetQuestionsPerSession(int count)
-    {
-        questionsPerSession = count;
-        if (questionManager != null)
-        {
-            questionManager.SetQuestionsPerSession(count);
-        }
-        Debug.Log($"Questions per session set to: {count}");
-    }
-
-    public QuestionData GetCurrentQuestionData()
-    {
-        return currentQuestionData;
-    }
-
-    public int GetCurrentQuestionNumber()
-    {
-        if (questionManager != null)
-        {
-            return questionManager.GetCurrentQuestionIndex() + 1;
-        }
-        return 1;
-    }
-
-    public int GetTotalQuestionsInSession()
-    {
-        if (questionManager != null)
-        {
-            return questionManager.GetTotalQuestionsInSession();
-        }
-        return questionsPerSession;
-    }
-
-    [ContextMenu("Test Dynamic Question Loading")]
-    public void TestDynamicQuestionLoading()
-    {
-        Debug.Log("=== TESTING DYNAMIC QUESTION LOADING ===");
-        Debug.Log($"Question Manager: {questionManager != null}");
-        Debug.Log($"Current Question Data: {currentQuestionData != null}");
-        Debug.Log($"Category: {questionCategory}");
-        Debug.Log($"Difficulty: {questionDifficultyLevel}");
+        if (correctAnswers == null)
+            correctAnswers = new HashSet<string>();
         
-        if (currentQuestionData != null)
+        correctAnswers.Clear();
+        
+        if (newCorrectAnswers != null)
         {
-            Debug.Log($"Current Question: {currentQuestionData.questionText}");
-            Debug.Log($"Type: {currentQuestionData.questionType}");
-            Debug.Log($"Correct Answers: {currentQuestionData.correctAnswers.Count}");
+            foreach (string answer in newCorrectAnswers)
+            {
+                if (!string.IsNullOrEmpty(answer))
+                {
+                    correctAnswers.Add(caseSensitiveAnswers ? answer : answer.ToLower());
+                }
+            }
         }
-    }
-
-    [ContextMenu("Load Next Question")]
-    public void TestLoadNextQuestion()
-    {
-        if (questionManager != null && questionManager.HasMoreQuestions())
-        {
-            LoadNextQuestion();
-        }
-        else
-        {
-            Debug.Log("No more questions available");
-        }
+        
+        Debug.Log($"Updated correct answers: {string.Join(", ", correctAnswers)}");
     }
     #endregion
 }

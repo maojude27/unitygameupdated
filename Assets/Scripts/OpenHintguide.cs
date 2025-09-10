@@ -14,7 +14,7 @@ public class OpenHint : MonoBehaviour
     {
         // Send hint access tracking to Flask web app
         SendHintAccessToFlask("YouTube", "https://www.youtube.com");
-
+        
         Application.OpenURL("https://www.youtube.com");
     }
 
@@ -23,7 +23,7 @@ public class OpenHint : MonoBehaviour
     {
         // Send custom hint access tracking to Flask web app
         SendHintAccessToFlask("Custom URL", url);
-
+        
         Application.OpenURL(url);
     }
 
@@ -36,18 +36,18 @@ public class OpenHint : MonoBehaviour
     private IEnumerator PostHintAccessToFlask(string hintType, string hintUrl)
     {
         string url = flaskURL + "/api/hint_access";
-
+        
         // Create JSON data for Flask
         string jsonData = "{\"student_id\":" + studentId + ",\"hint_type\":\"" + hintType + "\",\"hint_url\":\"" + hintUrl + "\",\"action\":\"hint_accessed\"}";
-
+        
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-
+        
         yield return request.SendWebRequest();
-
+        
         request.Dispose();
     }
 }

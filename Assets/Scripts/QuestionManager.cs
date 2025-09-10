@@ -20,7 +20,7 @@ public class QuestionManager : MonoBehaviour
     
     [Header("Current Session")]
     public QuestionData currentQuestion;
-    public List<QuestionData> sessionQuestions = new List<QuestionData>();
+    public List<QuestionData> sessionQuestions;
     public int currentQuestionIndex = 0;
     
     private QuestionDatabase questionDatabase;
@@ -34,6 +34,10 @@ public class QuestionManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            
+            // Initialize lists
+            if (sessionQuestions == null)
+                sessionQuestions = new List<QuestionData>();
         }
         else
         {
@@ -43,7 +47,7 @@ public class QuestionManager : MonoBehaviour
     
     void Start()
     {
-        gameStageManager = FindObjectOfType<GameStageManager>();
+        gameStageManager = FindFirstObjectByType<GameStageManager>();
         StartCoroutine(LoadQuestions());
     }
     
@@ -177,27 +181,23 @@ public class QuestionManager : MonoBehaviour
         questionDatabase = new QuestionDatabase();
         
         // Programming Questions Set
-        QuestionSet programmingSet = new QuestionSet
-        {
-            setName = "Programming Languages",
-            category = "Programming",
-            difficultyLevel = 1
-        };
+        QuestionSet programmingSet = new QuestionSet();
+        programmingSet.setName = "Programming Languages";
+        programmingSet.category = "Programming";
+        programmingSet.difficultyLevel = 1;
         
         // Input Field Question
-        QuestionData inputQuestion = new QuestionData
-        {
-            questionId = 1,
-            questionText = "Name 5 popular programming languages:",
-            questionType = "input_field",
-            maxAnswers = 5,
-            minimumAnswersRequired = 3,
-            allowDuplicateAnswers = false,
-            caseSensitiveAnswers = false,
-            passingScorePercentage = 60f,
-            category = "Programming",
-            difficultyLevel = 1
-        };
+        QuestionData inputQuestion = new QuestionData();
+        inputQuestion.questionId = 1;
+        inputQuestion.questionText = "Name 5 popular programming languages:";
+        inputQuestion.questionType = "input_field";
+        inputQuestion.maxAnswers = 5;
+        inputQuestion.minimumAnswersRequired = 3;
+        inputQuestion.allowDuplicateAnswers = false;
+        inputQuestion.caseSensitiveAnswers = false;
+        inputQuestion.passingScorePercentage = 60f;
+        inputQuestion.category = "Programming";
+        inputQuestion.difficultyLevel = 1;
         
         string[] programmingLanguages = {
             "python", "javascript", "c#", "java", "c++",
@@ -211,15 +211,13 @@ public class QuestionManager : MonoBehaviour
         programmingSet.questions.Add(inputQuestion);
         
         // Multiple Choice Question
-        QuestionData mcQuestion = new QuestionData
-        {
-            questionId = 2,
-            questionText = "Which of the following are programming languages?",
-            questionType = "multiple_choice",
-            passingScorePercentage = 70f,
-            category = "Programming",
-            difficultyLevel = 1
-        };
+        QuestionData mcQuestion = new QuestionData();
+        mcQuestion.questionId = 2;
+        mcQuestion.questionText = "Which of the following are programming languages?";
+        mcQuestion.questionType = "multiple_choice";
+        mcQuestion.passingScorePercentage = 70f;
+        mcQuestion.category = "Programming";
+        mcQuestion.difficultyLevel = 1;
         
         mcQuestion.multipleChoiceOptions.AddRange(new string[] {
             "Python", "JavaScript", "HTML", "SQL", "Photoshop", "Excel", "Java", "CSS"
@@ -229,15 +227,13 @@ public class QuestionManager : MonoBehaviour
         programmingSet.questions.Add(mcQuestion);
         
         // Drag and Drop Question
-        QuestionData dragQuestion = new QuestionData
-        {
-            questionId = 3,
-            questionText = "Drag the correct programming concepts:",
-            questionType = "drag_drop",
-            passingScorePercentage = 70f,
-            category = "Programming",
-            difficultyLevel = 1
-        };
+        QuestionData dragQuestion = new QuestionData();
+        dragQuestion.questionId = 3;
+        dragQuestion.questionText = "Drag the correct programming concepts:";
+        dragQuestion.questionType = "drag_drop";
+        dragQuestion.passingScorePercentage = 70f;
+        dragQuestion.category = "Programming";
+        dragQuestion.difficultyLevel = 1;
         
         dragQuestion.correctAnswers.AddRange(new string[] {
             "variable", "function", "loop", "array", "object",
@@ -248,26 +244,22 @@ public class QuestionManager : MonoBehaviour
         questionDatabase.questionSets.Add(programmingSet);
         
         // Math Questions Set
-        QuestionSet mathSet = new QuestionSet
-        {
-            setName = "Basic Mathematics",
-            category = "Mathematics",
-            difficultyLevel = 1
-        };
+        QuestionSet mathSet = new QuestionSet();
+        mathSet.setName = "Basic Mathematics";
+        mathSet.category = "Mathematics";
+        mathSet.difficultyLevel = 1;
         
-        QuestionData mathQuestion = new QuestionData
-        {
-            questionId = 4,
-            questionText = "Name 4 basic mathematical operations:",
-            questionType = "input_field",
-            maxAnswers = 4,
-            minimumAnswersRequired = 3,
-            allowDuplicateAnswers = false,
-            caseSensitiveAnswers = false,
-            passingScorePercentage = 75f,
-            category = "Mathematics",
-            difficultyLevel = 1
-        };
+        QuestionData mathQuestion = new QuestionData();
+        mathQuestion.questionId = 4;
+        mathQuestion.questionText = "Name 4 basic mathematical operations:";
+        mathQuestion.questionType = "input_field";
+        mathQuestion.maxAnswers = 4;
+        mathQuestion.minimumAnswersRequired = 3;
+        mathQuestion.allowDuplicateAnswers = false;
+        mathQuestion.caseSensitiveAnswers = false;
+        mathQuestion.passingScorePercentage = 75f;
+        mathQuestion.category = "Mathematics";
+        mathQuestion.difficultyLevel = 1;
         
         mathQuestion.correctAnswers.AddRange(new string[] {
             "addition", "subtraction", "multiplication", "division",
@@ -360,7 +352,7 @@ public class QuestionManager : MonoBehaviour
     {
         if (gameStageManager == null)
         {
-            gameStageManager = FindObjectOfType<GameStageManager>();
+            gameStageManager = FindFirstObjectByType<GameStageManager>();
             if (gameStageManager == null)
             {
                 Debug.LogError("GameStageManager not found!");
@@ -368,7 +360,7 @@ public class QuestionManager : MonoBehaviour
             }
         }
         
-        // Apply question settings
+        // Apply question settings (only if properties exist)
         gameStageManager.currentQuestion = currentQuestion.questionText;
         gameStageManager.maxAnswers = currentQuestion.maxAnswers;
         gameStageManager.minimumAnswersRequired = currentQuestion.minimumAnswersRequired;

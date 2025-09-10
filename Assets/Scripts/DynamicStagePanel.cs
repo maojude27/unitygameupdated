@@ -69,7 +69,7 @@ public class DynamicStagePanel_TMP : MonoBehaviour
     void LoadStage(string stageID)
     {
         Debug.Log($"Loading {currentSubject} - {stageID}");
-
+        
         // Send stage selection to Flask
         if (sendToFlask)
         {
@@ -102,15 +102,15 @@ public class DynamicStagePanel_TMP : MonoBehaviour
     private IEnumerator SendSubjectSelectionToFlask(string subject)
     {
         string jsonData = "{\"subject\":\"" + subject + "\",\"action\":\"subject_selected\",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-
+        
         UnityWebRequest request = new UnityWebRequest(flaskURL + "/api/subject_selection", "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-
+        
         yield return request.SendWebRequest();
-
+        
         if (request.result == UnityWebRequest.Result.Success)
         {
             Debug.Log("Successfully sent subject selection to Flask: " + subject);
@@ -119,22 +119,22 @@ public class DynamicStagePanel_TMP : MonoBehaviour
         {
             Debug.LogWarning("Failed to send subject selection to Flask: " + request.error);
         }
-
+        
         request.Dispose();
     }
 
     private IEnumerator SendStageSelectionToFlask(string subject, string stage)
     {
         string jsonData = "{\"subject\":\"" + subject + "\",\"stage\":\"" + stage + "\",\"action\":\"stage_selected\",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-
+        
         UnityWebRequest request = new UnityWebRequest(flaskURL + "/api/stage_selection", "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-
+        
         yield return request.SendWebRequest();
-
+        
         if (request.result == UnityWebRequest.Result.Success)
         {
             Debug.Log("Successfully sent stage selection to Flask: " + subject + " - " + stage);
@@ -143,7 +143,7 @@ public class DynamicStagePanel_TMP : MonoBehaviour
         {
             Debug.LogWarning("Failed to send stage selection to Flask: " + request.error);
         }
-
+        
         request.Dispose();
     }
 }

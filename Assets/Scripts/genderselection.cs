@@ -92,18 +92,18 @@ public class GenderSelection : MonoBehaviour
     private IEnumerator PostGenderSelectionToFlask(string gender)
     {
         string url = flaskURL + "/api/gender_selection";
-
+        
         // Create JSON data for Flask
         string jsonData = "{\"student_id\":" + studentId + ",\"selected_gender\":\"" + gender + "\",\"action\":\"selection\"}";
-
+        
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-
+        
         yield return request.SendWebRequest();
-
+        
         request.Dispose();
     }
 
@@ -116,18 +116,18 @@ public class GenderSelection : MonoBehaviour
     private IEnumerator PostGenderSubmissionToFlask(string gender)
     {
         string url = flaskURL + "/api/gender_submission";
-
+        
         // Create JSON data for Flask
         string jsonData = "{\"student_id\":" + studentId + ",\"final_gender\":\"" + gender + "\",\"action\":\"submit\"}";
-
+        
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-
+        
         yield return request.SendWebRequest();
-
+        
         request.Dispose();
     }
 }

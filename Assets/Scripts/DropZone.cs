@@ -306,7 +306,7 @@ public class FillBlankDropZone : MonoBehaviour, IDropHandler, IPointerEnterHandl
             {
                 string answer = GetButtonText(btn);
                 attackController.TriggerAttackWithEnemy(answer);
-
+                
                 // Send to Flask server
                 if (sendToFlask)
                 {
@@ -321,7 +321,7 @@ public class FillBlankDropZone : MonoBehaviour, IDropHandler, IPointerEnterHandl
     private IEnumerator SendDropEventToFlask(string answer, string eventType)
     {
         string jsonData = $"{{\"answer\":\"{answer}\", \"event_type\":\"{eventType}\", \"timestamp\":\"{System.DateTime.Now:yyyy-MM-dd HH:mm:ss}\"}}";
-
+        
         using (UnityWebRequest request = new UnityWebRequest($"{flaskServerUrl}/api/drop-event", "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
@@ -345,7 +345,7 @@ public class FillBlankDropZone : MonoBehaviour, IDropHandler, IPointerEnterHandl
     private IEnumerator SendZoneStatusToFlask(int buttonCount, bool hasButtons)
     {
         string jsonData = $"{{\"button_count\":{buttonCount}, \"has_buttons\":{hasButtons.ToString().ToLower()}, \"timestamp\":\"{System.DateTime.Now:yyyy-MM-dd HH:mm:ss}\"}}";
-
+        
         using (UnityWebRequest request = new UnityWebRequest($"{flaskServerUrl}/api/zone-status", "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);

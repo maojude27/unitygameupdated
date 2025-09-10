@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Networking;
 
-public class GameStageManager : MonoBehaviour
+public class GameMechanicDragButtons : MonoBehaviour
 {
     [Header("Game Mode")]
     public GameMode gameMode = GameMode.InputField;

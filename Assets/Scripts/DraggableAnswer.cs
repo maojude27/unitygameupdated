@@ -112,7 +112,7 @@ public class DraggableAnswer : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
         // Check what we dropped on
         GameObject droppedOn = eventData.pointerCurrentRaycast.gameObject;
-
+        
         if (droppedOn != null)
         {
             FillBlankDropZone dropZone = droppedOn.GetComponent<FillBlankDropZone>();
@@ -136,7 +136,7 @@ public class DraggableAnswer : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         SetDroppedInZone(true);
         transform.SetParent(dropZone.transform);
         rectTransform.anchoredPosition = Vector2.zero;
-
+        
         // Send to Flask web app - let Flask determine if correct
         SendAnswerToFlask(answerText, correctBlankIndex, true);
     }
@@ -146,22 +146,22 @@ public class DraggableAnswer : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     {
         StartCoroutine(PostAnswerToFlask(answer, blankIndex, isCorrect));
     }
-
+    
     private IEnumerator PostAnswerToFlask(string answer, int blankIndex, bool isCorrect)
     {
         string url = flaskURL + "/api/submit_fill_blank";
-
+        
         // Create JSON data for Flask
         string jsonData = "{\"answer\":\"" + answer + "\",\"blank_index\":" + blankIndex + ",\"is_correct\":" + isCorrect.ToString().ToLower() + "}";
-
+        
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-
+        
         yield return request.SendWebRequest();
-
+        
         request.Dispose();
     }
 

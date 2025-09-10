@@ -16,15 +16,6 @@ public class QuizData
 }
 
 [System.Serializable]
-public class QuestionData
-{
-    public string question_text;
-    public string question_type;
-    public string[] options;
-    public int correct_answer_index;
-}
-
-[System.Serializable]
 public class StudentData
 {
     public string name;
@@ -93,7 +84,7 @@ public abstract class BaseGameManager : MonoBehaviour
     protected HashSet<string> correctAnswers = new HashSet<string>();
     protected string currentUser = "aldrinivanmiole-cell";
     protected string sessionTime = "2025-09-02 23:01:38";
-
+    
     // Classroom integration variables
     protected QuizData currentAssignment;
     protected bool isSubmittedToClassroom = false;
@@ -143,12 +134,12 @@ public abstract class BaseGameManager : MonoBehaviour
 
     protected void SetupClassroomIntegration()
     {
-        if (!enableClassroomMode)
+        if (!enableClassroomMode) 
         {
             UpdateClassroomStatus("Classroom Mode Disabled", Color.gray);
             return;
         }
-
+        
         // Show server URL configuration
         Debug.Log($"Classroom Integration - Server URL: {serverURL}");
         UpdateClassroomStatus($"Practice Mode - Server: {serverURL}", Color.gray);
@@ -160,16 +151,16 @@ public abstract class BaseGameManager : MonoBehaviour
         // Real Flask API call to load assignment
         StartCoroutine(LoadAssignmentFromFlask());
     }
-
+    
     private IEnumerator LoadAssignmentFromFlask()
     {
         UpdateClassroomStatus("Loading assignment...", Color.yellow);
-
+        
         string url = serverURL + "/assignment/" + assignmentId;
         UnityWebRequest request = UnityWebRequest.Get(url);
-
+        
         yield return request.SendWebRequest();
-
+        
         if (request.result == UnityWebRequest.Result.Success)
         {
             try
@@ -189,7 +180,7 @@ public abstract class BaseGameManager : MonoBehaviour
             Debug.LogError("Failed to load assignment: " + request.error);
             OnAssignmentLoaded(false, null, "Failed to load assignment: " + request.error);
         }
-
+        
         request.Dispose();
     }
 
@@ -198,18 +189,18 @@ public abstract class BaseGameManager : MonoBehaviour
         if (success)
         {
             currentAssignment = assignment;
-
+            
             // Update the game question with assignment question
             if (assignment.questions != null && assignment.questions.Length > 0)
             {
-                currentQuestion = assignment.questions[0].question_text;
+                currentQuestion = assignment.questions[0].questionText;
                 if (questionText != null)
                     questionText.text = currentQuestion;
             }
-
+            
             if (assignmentInfoText != null)
                 assignmentInfoText.text = $"Assignment: {assignment.title}\nClass: {assignment.class_name}";
-
+            
             UpdateClassroomStatus("Assignment loaded - Ready to play!", Color.green);
         }
         else
@@ -222,27 +213,27 @@ public abstract class BaseGameManager : MonoBehaviour
     {
         if (!enableClassroomMode || currentAssignment == null || isSubmittedToClassroom)
             return;
-
+        
         // Real Flask API submission
         StartCoroutine(SubmitScoreToFlask(gameScore));
     }
-
+    
     private IEnumerator SubmitScoreToFlask(int gameScore)
     {
         UpdateClassroomStatus("Submitting to classroom...", Color.yellow);
-
+        
         string url = serverURL + "/submit/" + assignmentId;
         int studentId = PlayerPrefs.GetInt("StudentID", 1);
         string jsonData = "{\"answers\":[],\"total_score\":" + gameScore + ",\"student_id\":" + studentId + "}";
-
+        
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-
+        
         yield return request.SendWebRequest();
-
+        
         if (request.result == UnityWebRequest.Result.Success)
         {
             OnSubmissionComplete(true, "Successfully submitted to classroom!");
@@ -251,7 +242,7 @@ public abstract class BaseGameManager : MonoBehaviour
         {
             OnSubmissionComplete(false, "Failed to submit: " + request.error);
         }
-
+        
         request.Dispose();
     }
 
