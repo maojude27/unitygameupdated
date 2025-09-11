@@ -9,15 +9,17 @@ public class GoToClassList : MonoBehaviour
     public string classListSceneName = "classlist";
 
     // Session info - UPDATED
-    private string sessionTime = "2025-09-03 05:10:35";
+    private string sessionTime;
 
     [Header("Web App Connection")]
     public string flaskURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
     // For local development, change to: "http://127.0.0.1:5000"
-    public int studentId = 1;
 
     void Start()
     {
+        // Generate dynamic session time
+        sessionTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        
         Debug.Log($"GoToClassList initialized | Time: {sessionTime}");
         GetComponent<Button>().onClick.AddListener(LoadClassList);
     }
@@ -42,8 +44,12 @@ public class GoToClassList : MonoBehaviour
     {
         string url = flaskURL + "/api/navigation_event";
 
+        // Get dynamic student info
+        int studentId = PlayerPrefs.GetInt("StudentID", 1);
+        string studentName = PlayerPrefs.GetString("LoggedInUser", "");
+
         // Create JSON data for Flask
-        string jsonData = "{\"student_id\":" + studentId + ",\"session_time\":\"" + sessionTime + "\",\"action\":\"go_to_classlist\",\"scene\":\"" + classListSceneName + "\"}";
+        string jsonData = "{\"student_id\":" + studentId + ",\"student_name\":\"" + studentName + "\",\"session_time\":\"" + sessionTime + "\",\"action\":\"go_to_classlist\",\"scene\":\"" + classListSceneName + "\"}";
 
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);

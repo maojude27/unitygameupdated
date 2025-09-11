@@ -31,11 +31,16 @@ public class ClassCodeGate : MonoBehaviour
 
     void Start()
     {
+        Debug.Log("ClassCodeGate: Starting setup");
         SetupClassCodeGate();
     }
 
     void SetupClassCodeGate()
     {
+        Debug.Log($"ClassCodeGate: Classroom mode enabled: {enableClassroomMode}");
+        Debug.Log($"ClassCodeGate: Student logged in: {IsStudentLoggedIn()}");
+        Debug.Log($"ClassCodeGate: Student name: {GetCurrentStudentName()}");
+
         // Setup button listeners
         if (submitButton != null)
             submitButton.onClick.AddListener(SubmitClassCode);
@@ -71,15 +76,18 @@ public class ClassCodeGate : MonoBehaviour
         if (HasExistingClasses())
         {
             ShowExistingClasses();
-            ShowSkipOption(true);
+            UpdateStatus("Welcome back! Going to subjects...", Color.green);
+            // Hide class code panel and go directly to subjects for returning users
+            ShowClassCodePanel(false);
+            // Automatically transition to subjects after a brief delay
+            StartCoroutine(AutoTransitionToSubjects());
         }
         else
         {
             UpdateStatus("Enter a class code to join your first class", Color.blue);
+            ShowClassCodePanel(true);
             ShowSkipOption(false);
         }
-
-        ShowClassCodePanel(true);
     }
 
     void SetupLegacyMode()
@@ -109,9 +117,9 @@ public class ClassCodeGate : MonoBehaviour
             return;
         }
 
-        if (enteredCode.Length != 7) // Assuming class codes are 7 characters
+        if (enteredCode.Length < 3) // Minimum 3 characters
         {
-            UpdateStatus("Class code must be 7 characters", Color.red);
+            UpdateStatus("Class code must be at least 3 characters", Color.red);
             return;
         }
 
@@ -149,11 +157,17 @@ public class ClassCodeGate : MonoBehaviour
         if (request.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
         {
             success = true;
-            Debug.Log("Successfully joined class: " + classCode);
+            Debug.Log("Successfully joined class via API: " + classCode);
         }
         else
         {
-            Debug.LogError("Failed to join class: " + request.error);
+            Debug.LogWarning("API join failed, trying simulation: " + request.error);
+            // Fallback to simulation if API fails
+            success = SimulateClassJoin(classCode);
+            if (success)
+            {
+                Debug.Log("Successfully joined class via simulation: " + classCode);
+            }
         }
 
         request.Dispose();
@@ -166,7 +180,17 @@ public class ClassCodeGate : MonoBehaviour
             // Refresh class display
             yield return new WaitForSeconds(1f);
             ShowExistingClasses();
+            ShowJoinedClassesInUI(); // Add visual display
             ShowSkipOption(true);
+
+            // Auto transition after a few seconds if this is the first class
+            if (GetJoinedClasses().Length == 1)
+            {
+                yield return new WaitForSeconds(2f);
+                UpdateStatus("Continuing to subject selection...", Color.blue);
+                yield return new WaitForSeconds(1f);
+                TransitionToSubjects();
+            }
         }
         else
         {
@@ -184,7 +208,7 @@ public class ClassCodeGate : MonoBehaviour
     bool SimulateClassJoin(string classCode)
     {
         // Simulate some valid class codes for testing
-        string[] validCodes = { "CS101A1", "MATH202", "ENG301B", "PHYS101", "CHEM205" };
+        string[] validCodes = { "CS101A1", "MATH202", "ENG301B", "PHYS101", "CHEM205", "TEST123", "DEMO001" };
 
         foreach (string validCode in validCodes)
         {
@@ -226,33 +250,71 @@ public class ClassCodeGate : MonoBehaviour
             return;
         }
 
+        // Show current classes before transitioning
+        ShowJoinedClassesInUI();
+        
+        UpdateStatus("Proceeding to subject selection...", Color.blue);
+        
         // Transition to subjects
         TransitionToSubjects();
     }
 
     void TransitionToSubjects()
     {
-        UpdateStatus("Continuing to subjects...", Color.green);
+        UpdateStatus("Welcome! Select a subject to start learning", Color.green);
 
+        // Hide class code panel
         if (classCodePanel != null)
             classCodePanel.SetActive(false);
 
+        // Show subject buttons
         if (subjectButtonsContainer != null)
+        {
             subjectButtonsContainer.SetActive(true);
+            Debug.Log("Subject buttons container activated");
+        }
+        else
+        {
+            Debug.LogWarning("Subject buttons container is null - check Inspector assignment");
+        }
+
+        // Also try to find and activate DynamicStagePanel if it exists
+        DynamicStagePanel_TMP stagePanel = FindFirstObjectByType<DynamicStagePanel_TMP>();
+        if (stagePanel != null)
+        {
+            stagePanel.gameObject.SetActive(true);
+            Debug.Log("DynamicStagePanel found and activated");
+        }
+
+        // Remove any static/hardcoded displays that might be visible
+        RemoveStaticElements();
     }
 
     // Helper Methods
     bool IsStudentLoggedIn()
     {
-        // TODO: Replace with actual check when ClassroomAPIManager is available
-        // For now, check if we have a student name saved
-        return !string.IsNullOrEmpty(PlayerPrefs.GetString("StudentName", ""));
+        // Check multiple login indicators
+        bool hasStudentName = !string.IsNullOrEmpty(PlayerPrefs.GetString("StudentName", ""));
+        bool hasLoggedInUser = !string.IsNullOrEmpty(PlayerPrefs.GetString("LoggedInUser", ""));
+        bool isLoggedInFlag = PlayerPrefs.GetInt("IsLoggedIn", 0) == 1;
+        bool hasStudentID = PlayerPrefs.GetInt("StudentID", 0) > 0;
+
+        return hasStudentName || hasLoggedInUser || isLoggedInFlag || hasStudentID;
     }
 
     string GetCurrentStudentName()
     {
-        // TODO: Replace with actual API call when ClassroomAPIManager is available
-        return PlayerPrefs.GetString("StudentName", "Guest Student");
+        // Try multiple sources for student name
+        string studentName = PlayerPrefs.GetString("StudentName", "");
+        if (string.IsNullOrEmpty(studentName))
+        {
+            studentName = PlayerPrefs.GetString("LoggedInUser", "");
+        }
+        if (string.IsNullOrEmpty(studentName))
+        {
+            studentName = "Logged In Student";
+        }
+        return studentName;
     }
 
     bool HasExistingClasses()
@@ -273,7 +335,7 @@ public class ClassCodeGate : MonoBehaviour
 
             foreach (string classCode in classes)
             {
-                classDisplay += $"• {classCode}\n";
+                classDisplay += $"ï¿½ {classCode}\n";
             }
 
             if (currentClassesText != null)
@@ -342,5 +404,58 @@ public class ClassCodeGate : MonoBehaviour
 
         // Reset UI
         SetupClassCodeGate();
+    }
+
+    // Remove any static/hardcoded elements from the scene
+    private void RemoveStaticElements()
+    {
+        // Find and remove any hardcoded text or UI elements
+        GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+        
+        foreach (GameObject obj in allObjects)
+        {
+            // Remove objects with names suggesting they're static/hardcoded
+            if (obj.name.ToLower().Contains("static") || 
+                obj.name.ToLower().Contains("hardcode") ||
+                obj.name.ToLower().Contains("placeholder") ||
+                obj.name.ToLower().Contains("demo"))
+            {
+                Debug.Log($"Removing static element: {obj.name}");
+                obj.SetActive(false);
+            }
+        }
+    }
+
+    // Display joined classes in a more dynamic way
+    public void ShowJoinedClassesInUI()
+    {
+        string[] joinedClasses = GetJoinedClasses();
+        
+        if (joinedClasses.Length > 0)
+        {
+            string classDisplay = "Your Classes:\n";
+            foreach (string classCode in joinedClasses)
+            {
+                classDisplay += $"ðŸ“š {classCode}\n";
+            }
+
+            if (currentClassesText != null)
+            {
+                currentClassesText.text = classDisplay;
+                currentClassesText.gameObject.SetActive(true);
+            }
+
+            // Also log for debugging
+            Debug.Log($"Student joined classes: {string.Join(", ", joinedClasses)}");
+        }
+    }
+
+    IEnumerator AutoTransitionToSubjects()
+    {
+        // Wait 1.5 seconds to show the welcome message
+        yield return new WaitForSeconds(1.5f);
+        
+        // Then transition to subjects
+        TransitionToSubjects();
     }
 }

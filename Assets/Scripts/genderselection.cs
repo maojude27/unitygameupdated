@@ -19,7 +19,6 @@ public class GenderSelection : MonoBehaviour
     [Header("Web App Connection")]
     public string flaskURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
     // For local development, change to: "http://127.0.0.1:5000"
-    public int studentId = 1;
 
     void Start()
     {
@@ -41,6 +40,9 @@ public class GenderSelection : MonoBehaviour
             HighlightButton(boyButton);
         else if (gender == "Girl")
             HighlightButton(girlButton);
+
+        // Save using the safe gender helper system
+        GenderHelper.SaveGender(selectedGender);
 
         // Send gender selection to Flask web app
         SendGenderSelectionToFlask(gender);
@@ -68,14 +70,14 @@ public class GenderSelection : MonoBehaviour
     {
         if (selectedGender != "")
         {
-            // Store the selected gender locally
-            PlayerPrefs.SetString("SelectedGender", selectedGender);
+            // Mark gender selection as completed (user has submitted their choice)
+            GenderHelper.CompleteGenderSelection(selectedGender);
 
             // Send final selection to Flask web app
             SendGenderSubmissionToFlask(selectedGender);
 
-            // Load the TitleScreen scene
-            SceneManager.LoadScene("TitleScreen");
+            // Load the titlescreen scene using safe loader
+            SafeSceneLoader.LoadScene("titlescreen", "login");
         }
         else
         {
@@ -93,8 +95,12 @@ public class GenderSelection : MonoBehaviour
     {
         string url = flaskURL + "/api/gender_selection";
         
+        // Get dynamic student info
+        int studentId = PlayerPrefs.GetInt("StudentID", 1);
+        string studentName = PlayerPrefs.GetString("LoggedInUser", "");
+        
         // Create JSON data for Flask
-        string jsonData = "{\"student_id\":" + studentId + ",\"selected_gender\":\"" + gender + "\",\"action\":\"selection\"}";
+        string jsonData = "{\"student_id\":" + studentId + ",\"student_name\":\"" + studentName + "\",\"selected_gender\":\"" + gender + "\",\"action\":\"selection\"}";
         
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
@@ -117,8 +123,12 @@ public class GenderSelection : MonoBehaviour
     {
         string url = flaskURL + "/api/gender_submission";
         
+        // Get dynamic student info
+        int studentId = PlayerPrefs.GetInt("StudentID", 1);
+        string studentName = PlayerPrefs.GetString("LoggedInUser", "");
+        
         // Create JSON data for Flask
-        string jsonData = "{\"student_id\":" + studentId + ",\"final_gender\":\"" + gender + "\",\"action\":\"submit\"}";
+        string jsonData = "{\"student_id\":" + studentId + ",\"student_name\":\"" + studentName + "\",\"final_gender\":\"" + gender + "\",\"action\":\"submit\"}";
         
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);

@@ -6,11 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/login.unity
-    guid: 8c9cfa26abfee488c85f1582747f6a02
-  - enabled: 1
     path: Assets/Scenes/register.unity
     guid: 8d4c75f463972834a95e58f46bdc9dfb
+  - enabled: 1
+    path: Assets/Scenes/login.unity
+    guid: 8c9cfa26abfee488c85f1582747f6a02
   - enabled: 1
     path: Assets/Scenes/titlescreen.unity
     guid: 045a9674dfea14f49bc62f96d0e3b4c0
@@ -38,6 +38,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GPyesno.unity
     guid: 353cf468241c96f4c83643b8bc09b36c
+  - enabled: 1
+    path: Assets/Scenes/gender.unity
+    guid: e5817115577984149a4211e5f031655c
   m_configObjects:
     com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000, guid: bc38cd225c89364419619a96f9fbf82d, type: 2}
     com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: da23a4089b47ebf43af279870c8d78ab, type: 2}

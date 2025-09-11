@@ -119,8 +119,9 @@ public class RegisterManager : MonoBehaviour
 
                         Debug.Log($"Registration Success: ID={response.student_id}, Name={response.student_name}");
 
-                        // Optionally redirect to dashboard after successful registration
-                        // SceneManager.LoadScene("dashboard");
+                        // After successful registration, go to gender selection
+                        Debug.Log("Registration complete. Redirecting to gender selection...");
+                        StartCoroutine(DelayedSceneLoad("gender", 2f));
                     }
                     else
                     {
@@ -163,6 +164,13 @@ public class RegisterManager : MonoBehaviour
     public void GoBackToLogin()
     {
         SceneManager.LoadScene("login");
+    }
+    
+    IEnumerator DelayedSceneLoad(string sceneName, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        Debug.Log($"Loading scene: {sceneName}");
+        SafeSceneLoader.LoadScene(sceneName, "titlescreen");
     }
 }
 

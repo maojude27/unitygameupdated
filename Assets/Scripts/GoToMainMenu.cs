@@ -11,7 +11,6 @@ public class GoToMainMenu : MonoBehaviour
     [Header("Web App Connection")]
     public string flaskURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
     // For local development, change to: "http://127.0.0.1:5000"
-    public int studentId = 1;
 
     void Start()
     {
@@ -36,8 +35,12 @@ public class GoToMainMenu : MonoBehaviour
     {
         string url = flaskURL + "/api/navigation_event";
         
+        // Get dynamic student info
+        int studentId = PlayerPrefs.GetInt("StudentID", 1);
+        string studentName = PlayerPrefs.GetString("LoggedInUser", "");
+        
         // Create JSON data for Flask
-        string jsonData = "{\"student_id\":" + studentId + ",\"action\":\"go_to_main_menu\",\"scene\":\"" + mainMenuSceneName + "\"}";
+        string jsonData = "{\"student_id\":" + studentId + ",\"student_name\":\"" + studentName + "\",\"action\":\"go_to_main_menu\",\"scene\":\"" + mainMenuSceneName + "\"}";
         
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);

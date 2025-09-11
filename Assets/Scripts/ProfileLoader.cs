@@ -38,12 +38,36 @@ public class ProfileLoader : MonoBehaviour
 
     void Start()
     {
-        if (useWebAppData)
+        try
         {
-            LoadProfileFromWebApp();
+            // Validate UI components
+            if (avatarImage == null)
+                Debug.LogWarning("ProfileLoader: avatarImage is not assigned!");
+            if (studentNameText == null)
+                Debug.LogWarning("ProfileLoader: studentNameText is not assigned!");
+            if (gradeLevelText == null)
+                Debug.LogWarning("ProfileLoader: gradeLevelText is not assigned!");
+            if (classNameText == null)
+                Debug.LogWarning("ProfileLoader: classNameText is not assigned!");
+
+            // Check if we're in offline mode
+            bool offlineMode = PlayerPrefs.GetInt("OfflineMode", 0) == 1;
+            
+            if (useWebAppData && !offlineMode)
+            {
+                LoadProfileFromWebApp();
+            }
+            else
+            {
+                Debug.Log("ProfileLoader: Using offline mode or local data");
+                LoadProfileFromPlayerPrefs();
+            }
         }
-        else
+        catch (System.Exception e)
         {
+            Debug.LogError($"ProfileLoader Start error: {e.Message}");
+            // Fallback to safe local loading
+            UpdateStatus("Error loading profile - using safe mode", Color.red);
             LoadProfileFromPlayerPrefs();
         }
     }
@@ -95,26 +119,36 @@ public class ProfileLoader : MonoBehaviour
     
     void ApplyProfile(StudentProfile profile)
     {
-        // Set avatar based on gender
-        if (profile.gender.ToLower() == "female" && Favatar != null)
+        // Set avatar based on gender using safe helper system
+        if (avatarImage != null)
         {
-            avatarImage.sprite = Favatar;
-        }
-        else if (Mavatar != null)
-        {
-            avatarImage.sprite = Mavatar;
+            // If profile has gender info, save it and use it
+            if (!string.IsNullOrEmpty(profile.gender))
+            {
+                GenderHelper.SaveGender(profile.gender);
+            }
+            
+            // Update avatar using the safe helper
+            GenderHelper.UpdateAvatarImage(avatarImage, Mavatar, Favatar);
         }
 
-        // Set profile information
-        if (studentNameText) studentNameText.text = profile.name;
-        if (gradeLevelText) gradeLevelText.text = profile.grade_level;
-        if (classNameText) classNameText.text = profile.class_name;
+        // Set profile information with null checks
+        if (studentNameText != null && !string.IsNullOrEmpty(profile.name)) 
+            studentNameText.text = profile.name;
+        if (gradeLevelText != null && !string.IsNullOrEmpty(profile.grade_level)) 
+            gradeLevelText.text = profile.grade_level;
+        if (classNameText != null && !string.IsNullOrEmpty(profile.class_name)) 
+            classNameText.text = profile.class_name;
         
         // Save to PlayerPrefs for offline use
-        PlayerPrefs.SetString("StudentName", profile.name);
-        PlayerPrefs.SetString("SelectedGender", profile.gender);
-        PlayerPrefs.SetString("GradeLevel", profile.grade_level);
-        PlayerPrefs.SetString("ClassName", profile.class_name);
+        if (!string.IsNullOrEmpty(profile.name))
+            PlayerPrefs.SetString("StudentName", profile.name);
+        if (!string.IsNullOrEmpty(profile.gender))
+            PlayerPrefs.SetString("SelectedGender", profile.gender);
+        if (!string.IsNullOrEmpty(profile.grade_level))
+            PlayerPrefs.SetString("GradeLevel", profile.grade_level);
+        if (!string.IsNullOrEmpty(profile.class_name))
+            PlayerPrefs.SetString("ClassName", profile.class_name);
         PlayerPrefs.SetInt("StudentId", profile.id);
         PlayerPrefs.Save();
         
@@ -127,24 +161,32 @@ public class ProfileLoader : MonoBehaviour
         
         // Load from PlayerPrefs (fallback/offline mode)
         string gender = PlayerPrefs.GetString("SelectedGender", "Male");
-        string studentName = PlayerPrefs.GetString("StudentName", "Juan Dela Cruz");
+        
+        // Get the actual logged-in user's name, not hardcoded
+        string studentName = PlayerPrefs.GetString("StudentName", "");
+        if (string.IsNullOrEmpty(studentName))
+        {
+            studentName = PlayerPrefs.GetString("LoggedInUser", "");
+        }
+        if (string.IsNullOrEmpty(studentName))
+        {
+            studentName = "Student"; // Generic fallback instead of hardcoded name
+        }
+        
         string gradeLevel = PlayerPrefs.GetString("GradeLevel", "Grade 7");
         string className = PlayerPrefs.GetString("ClassName", "Sample Class");
 
-        // Set avatar based on gender
-        if (gender.ToLower() == "female" && Favatar != null)
+        // Set avatar based on gender using safe helper system
+        if (avatarImage != null)
         {
-            avatarImage.sprite = Favatar;
-        }
-        else if (Mavatar != null)
-        {
-            avatarImage.sprite = Mavatar;
+            // Use GenderHelper for safe avatar updating
+            GenderHelper.UpdateAvatarImage(avatarImage, Mavatar, Favatar);
         }
 
-        // Set profile information
-        if (studentNameText) studentNameText.text = studentName;
-        if (gradeLevelText) gradeLevelText.text = gradeLevel;
-        if (classNameText) classNameText.text = className;
+        // Set profile information with null checks
+        if (studentNameText != null) studentNameText.text = studentName;
+        if (gradeLevelText != null) gradeLevelText.text = gradeLevel;
+        if (classNameText != null) classNameText.text = className;
         
         UpdateStatus("Local profile loaded", Color.green);
         

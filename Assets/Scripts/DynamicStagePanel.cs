@@ -31,17 +31,33 @@ public class DynamicStagePanel_TMP : MonoBehaviour
 
     void Start()
     {
-        stagePanel.SetActive(false);
+        // Initialize stage panel if assigned
+        if (stagePanel != null)
+        {
+            stagePanel.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning("DynamicStagePanel: stagePanel is not assigned in the inspector!");
+        }
 
-        mathButton.onClick.AddListener(() => ShowStages("Math"));
-        scienceButton.onClick.AddListener(() => ShowStages("Science"));
-        englishButton.onClick.AddListener(() => ShowStages("English"));
-        peButton.onClick.AddListener(() => ShowStages("PE"));
-        artButton.onClick.AddListener(() => ShowStages("Art"));
+        // Setup button listeners with null checks
+        if (mathButton != null)
+            mathButton.onClick.AddListener(() => ShowStages("Math"));
+        if (scienceButton != null)
+            scienceButton.onClick.AddListener(() => ShowStages("Science"));
+        if (englishButton != null)
+            englishButton.onClick.AddListener(() => ShowStages("English"));
+        if (peButton != null)
+            peButton.onClick.AddListener(() => ShowStages("PE"));
+        if (artButton != null)
+            artButton.onClick.AddListener(() => ShowStages("Art"));
 
-        backButton.onClick.AddListener(HidePanel);
+        if (backButton != null)
+            backButton.onClick.AddListener(HidePanel);
 
-        stageButton1.onClick.AddListener(() => LoadStage("Stage1"));
+        if (stageButton1 != null)
+            stageButton1.onClick.AddListener(() => LoadStage("Stage1"));
 
         // Lock stage 2 and 3 at start
         SetButtonState(stageButton2, false);
@@ -51,29 +67,50 @@ public class DynamicStagePanel_TMP : MonoBehaviour
     void ShowStages(string subject)
     {
         currentSubject = subject;
-        stagePanel.SetActive(true);
-        titleText.text = subject + " Stages";
+        
+        if (stagePanel != null)
+        {
+            stagePanel.SetActive(true);
+        }
+        
+        if (titleText != null)
+        {
+            titleText.text = subject + " Stages";
+        }
 
-        // Send subject selection to Flask
-        if (sendToFlask)
+        // Send subject selection to Flask (only if not in offline mode)
+        bool offlineMode = PlayerPrefs.GetInt("OfflineMode", 0) == 1;
+        if (sendToFlask && !offlineMode)
         {
             StartCoroutine(SendSubjectSelectionToFlask(subject));
+        }
+        else if (offlineMode)
+        {
+            Debug.Log($"Offline mode: Subject {subject} selected (not sent to server)");
         }
     }
 
     void HidePanel()
     {
-        stagePanel.SetActive(false);
+        if (stagePanel != null)
+        {
+            stagePanel.SetActive(false);
+        }
     }
 
     void LoadStage(string stageID)
     {
         Debug.Log($"Loading {currentSubject} - {stageID}");
         
-        // Send stage selection to Flask
-        if (sendToFlask)
+        // Send stage selection to Flask (only if not in offline mode)
+        bool offlineMode = PlayerPrefs.GetInt("OfflineMode", 0) == 1;
+        if (sendToFlask && !offlineMode)
         {
             StartCoroutine(SendStageSelectionToFlask(currentSubject, stageID));
+        }
+        else if (offlineMode)
+        {
+            Debug.Log($"Offline mode: Stage {stageID} selected for {currentSubject} (not sent to server)");
         }
 
         SceneManager.LoadScene("GameplayScene");
@@ -91,11 +128,14 @@ public class DynamicStagePanel_TMP : MonoBehaviour
 
     void SetButtonState(Button btn, bool active)
     {
-        btn.interactable = active;
-        CanvasGroup cg = btn.GetComponent<CanvasGroup>();
-        if (cg == null) cg = btn.gameObject.AddComponent<CanvasGroup>();
-        cg.alpha = active ? 1f : 0.5f;
-        cg.blocksRaycasts = active;
+        if (btn != null)
+        {
+            btn.interactable = active;
+            CanvasGroup cg = btn.GetComponent<CanvasGroup>();
+            if (cg == null) cg = btn.gameObject.AddComponent<CanvasGroup>();
+            cg.alpha = active ? 1f : 0.5f;
+            cg.blocksRaycasts = active;
+        }
     }
 
     // Flask Integration Methods
