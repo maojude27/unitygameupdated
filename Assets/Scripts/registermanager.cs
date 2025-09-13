@@ -28,7 +28,10 @@ public class RegisterManager : MonoBehaviour
         messageText.text = "";
         submitButton.onClick.AddListener(OnRegisterClick);
         if (loginButton != null)
+        {
             loginButton.onClick.AddListener(GoBackToLogin);
+            loginButton.gameObject.SetActive(false); // Hide login button at start
+        }
     }
 
     void OnRegisterClick()
@@ -56,19 +59,19 @@ public class RegisterManager : MonoBehaviour
         // Start registration
         ShowMessage("Registering student...", true);
         submitButton.interactable = false;
-        StartCoroutine(RegisterStudent(firstName, lastName, email));
+        StartCoroutine(RegisterStudent(firstName, lastName, email, password));
     }
 
-    IEnumerator RegisterStudent(string firstName, string lastName, string email)
+    IEnumerator RegisterStudent(string firstName, string lastName, string email, string password)
     {
         // Prepare data for simple registration (no class enrollment)
         var studentData = new StudentRegistrationRequest
         {
             name = $"{firstName} {lastName}",
             email = email,
-            password = passwordInput.text,
+            password = password,
             device_id = SystemInfo.deviceUniqueIdentifier,
-            grade_level = "Grade 1",
+            grade_level = "Grade 1", // TODO: Make this dynamic if needed
             avatar_url = ""
         };
 
@@ -78,12 +81,10 @@ public class RegisterManager : MonoBehaviour
         // Create POST request
         using (UnityWebRequest request = new UnityWebRequest(apiUrl, "POST"))
         {
-            // Convert JSON string to bytes
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
 
-            // Set headers
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("Accept", "application/json");
 
@@ -106,27 +107,28 @@ public class RegisterManager : MonoBehaviour
                 {
                     var response = JsonUtility.FromJson<StudentRegistrationReply>(request.downloadHandler.text);
 
-                    if (response.status == "success")
+                    if (response.status == "success" && response.student_id > 0)
                     {
-                        // Save student data to PlayerPrefs
                         PlayerPrefs.SetInt("StudentID", response.student_id);
                         PlayerPrefs.SetString("StudentName", response.student_name);
                         PlayerPrefs.SetInt("TotalPoints", response.total_points);
                         PlayerPrefs.Save();
 
-                        ShowMessage($"Registration successful! Welcome {response.student_name}!", true);
+                        ShowMessage($"Registration successful! Welcome {response.student_name}! Please log in.", true);
                         ClearForm();
 
                         Debug.Log($"Registration Success: ID={response.student_id}, Name={response.student_name}");
 
-                        // After successful registration, go to gender selection
-                        Debug.Log("Registration complete. Redirecting to gender selection...");
-                        StartCoroutine(DelayedSceneLoad("gender", 2f));
+                        // Show login button, don't auto-redirect
+                        if (loginButton != null)
+                            loginButton.gameObject.SetActive(true);
                     }
                     else
                     {
                         ShowMessage("Registration failed. Please try again.", false);
-                        Debug.LogError($"Server returned failure: {response.status}");
+                        Debug.LogError($"Server returned failure or missing ID: {response.status}, ID: {response.student_id}");
+                        if (loginButton != null)
+                            loginButton.gameObject.SetActive(true);
                     }
                 }
                 catch (Exception e)
@@ -134,6 +136,8 @@ public class RegisterManager : MonoBehaviour
                     ShowMessage("Error processing server response.", false);
                     Debug.LogError($"JSON parsing error: {e.Message}");
                     Debug.LogError($"Raw response: {request.downloadHandler.text}");
+                    if (loginButton != null)
+                        loginButton.gameObject.SetActive(true);
                 }
             }
             else
@@ -142,6 +146,8 @@ public class RegisterManager : MonoBehaviour
                 Debug.LogError($"Request failed: {request.error}");
                 Debug.LogError($"Response code: {request.responseCode}");
                 Debug.LogError($"Response body: {request.downloadHandler.text}");
+                if (loginButton != null)
+                    loginButton.gameObject.SetActive(true);
             }
         }
     }
@@ -164,13 +170,6 @@ public class RegisterManager : MonoBehaviour
     public void GoBackToLogin()
     {
         SceneManager.LoadScene("login");
-    }
-    
-    IEnumerator DelayedSceneLoad(string sceneName, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        Debug.Log($"Loading scene: {sceneName}");
-        SafeSceneLoader.LoadScene(sceneName, "titlescreen");
     }
 }
 

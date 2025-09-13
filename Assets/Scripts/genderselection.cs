@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine.Networking;
 using System.Collections;
 
 public class GenderSelection : MonoBehaviour
@@ -16,12 +15,16 @@ public class GenderSelection : MonoBehaviour
     public Color normalColor = Color.white;
     public Color selectedColor = Color.green;
 
-    [Header("Web App Connection")]
-    public string flaskURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
-    // For local development, change to: "http://127.0.0.1:5000"
-
     void Start()
     {
+        // Check if user has already completed gender selection
+        if (HasAlreadyCompletedGenderSelection())
+        {
+            Debug.Log("Gender already selected, skipping to main menu");
+            LoadMainMenu();
+            return;
+        }
+
         // Add listeners
         boyButton.onClick.AddListener(() => SelectGender("Boy"));
         girlButton.onClick.AddListener(() => SelectGender("Girl"));
@@ -29,6 +32,14 @@ public class GenderSelection : MonoBehaviour
 
         // Set initial button colors
         ResetButtonColors();
+
+        Debug.Log("Gender selection scene loaded - first time user");
+    }
+
+    bool HasAlreadyCompletedGenderSelection()
+    {
+        // Check if user has completed gender selection before
+        return PlayerPrefs.GetInt("GenderSelectionCompleted", 0) == 1;
     }
 
     void SelectGender(string gender)
@@ -41,11 +52,7 @@ public class GenderSelection : MonoBehaviour
         else if (gender == "Girl")
             HighlightButton(girlButton);
 
-        // Save using the safe gender helper system
-        GenderHelper.SaveGender(selectedGender);
-
-        // Send gender selection to Flask web app
-        SendGenderSelectionToFlask(gender);
+        Debug.Log($"Gender selected: {gender}");
     }
 
     void HighlightButton(Button btn)
@@ -70,14 +77,17 @@ public class GenderSelection : MonoBehaviour
     {
         if (selectedGender != "")
         {
-            // Mark gender selection as completed (user has submitted their choice)
-            GenderHelper.CompleteGenderSelection(selectedGender);
+            // Save gender selection locally
+            SaveGenderSelectionLocally(selectedGender);
 
-            // Send final selection to Flask web app
-            SendGenderSubmissionToFlask(selectedGender);
+            // Mark that gender selection has been completed (prevents showing this scene again)
+            PlayerPrefs.SetInt("GenderSelectionCompleted", 1);
+            PlayerPrefs.Save();
 
-            // Load the titlescreen scene using safe loader
-            SafeSceneLoader.LoadScene("titlescreen", "login");
+            Debug.Log($"Gender selection completed and saved: {selectedGender}");
+
+            // Load the main menu
+            LoadMainMenu();
         }
         else
         {
@@ -85,59 +95,73 @@ public class GenderSelection : MonoBehaviour
         }
     }
 
-    // Flask web app integration - Send gender selection
-    private void SendGenderSelectionToFlask(string gender)
+    void SaveGenderSelectionLocally(string gender)
     {
-        StartCoroutine(PostGenderSelectionToFlask(gender));
+        // Save the selected gender locally
+        PlayerPrefs.SetString("SelectedGender", gender);
+
+        // Save avatar sprite name based on gender
+        string avatarSpriteName = gender == "Boy" ? "BoyAvatar" : "GirlAvatar";
+        PlayerPrefs.SetString("SelectedAvatarSprite", avatarSpriteName);
+
+        // Mark that user has selected a gender
+        PlayerPrefs.SetInt("HasSelectedGender", 1);
+
+        PlayerPrefs.Save();
+
+        Debug.Log($"Gender saved locally: {gender}, Avatar: {avatarSpriteName}");
     }
 
-    private IEnumerator PostGenderSelectionToFlask(string gender)
+    void LoadMainMenu()
     {
-        string url = flaskURL + "/api/gender_selection";
-        
-        // Get dynamic student info
-        int studentId = PlayerPrefs.GetInt("StudentID", 1);
-        string studentName = PlayerPrefs.GetString("LoggedInUser", "");
-        
-        // Create JSON data for Flask
-        string jsonData = "{\"student_id\":" + studentId + ",\"student_name\":\"" + studentName + "\",\"selected_gender\":\"" + gender + "\",\"action\":\"selection\"}";
-        
-        UnityWebRequest request = new UnityWebRequest(url, "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-        
-        yield return request.SendWebRequest();
-        
-        request.Dispose();
+        // Load the titlescreen scene using SafeSceneLoader (static class)
+        try
+        {
+            SafeSceneLoader.LoadScene("titlescreen", "login");
+        }
+        catch (System.Exception)
+        {
+            // Fallback to regular SceneManager if SafeSceneLoader fails
+            SceneManager.LoadScene("titlescreen");
+        }
     }
 
-    // Flask web app integration - Send final gender submission
-    private void SendGenderSubmissionToFlask(string gender)
+    // Public static methods for other scripts to use
+    public static bool ShouldShowGenderSelection()
     {
-        StartCoroutine(PostGenderSubmissionToFlask(gender));
+        // Show gender selection only if:
+        // 1. User is logged in/registered
+        // 2. User hasn't completed gender selection yet
+        bool isLoggedIn = PlayerPrefs.GetInt("StudentID", 0) > 0;
+        bool genderCompleted = PlayerPrefs.GetInt("GenderSelectionCompleted", 0) == 1;
+
+        return isLoggedIn && !genderCompleted;
     }
 
-    private IEnumerator PostGenderSubmissionToFlask(string gender)
+    public static string GetSelectedGender()
     {
-        string url = flaskURL + "/api/gender_submission";
-        
-        // Get dynamic student info
-        int studentId = PlayerPrefs.GetInt("StudentID", 1);
-        string studentName = PlayerPrefs.GetString("LoggedInUser", "");
-        
-        // Create JSON data for Flask
-        string jsonData = "{\"student_id\":" + studentId + ",\"student_name\":\"" + studentName + "\",\"final_gender\":\"" + gender + "\",\"action\":\"submit\"}";
-        
-        UnityWebRequest request = new UnityWebRequest(url, "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-        
-        yield return request.SendWebRequest();
-        
-        request.Dispose();
+        return PlayerPrefs.GetString("SelectedGender", "");
+    }
+
+    public static string GetSelectedAvatarSprite()
+    {
+        return PlayerPrefs.GetString("SelectedAvatarSprite", "");
+    }
+
+    public static bool HasCompletedGenderSelection()
+    {
+        return PlayerPrefs.GetInt("GenderSelectionCompleted", 0) == 1;
+    }
+
+    // Method to reset gender selection (for testing or if user wants to change)
+    public static void ResetGenderSelection()
+    {
+        PlayerPrefs.DeleteKey("GenderSelectionCompleted");
+        PlayerPrefs.DeleteKey("SelectedGender");
+        PlayerPrefs.DeleteKey("SelectedAvatarSprite");
+        PlayerPrefs.DeleteKey("HasSelectedGender");
+        PlayerPrefs.Save();
+
+        Debug.Log("Gender selection reset - user will see gender scene again on next login");
     }
 }

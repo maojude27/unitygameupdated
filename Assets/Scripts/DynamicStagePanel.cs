@@ -2,8 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
-using UnityEngine.Networking;
-using System.Collections;
+using System.Collections.Generic;
 
 public class DynamicStagePanel_TMP : MonoBehaviour
 {
@@ -14,6 +13,12 @@ public class DynamicStagePanel_TMP : MonoBehaviour
     public Button peButton;
     public Button artButton;
 
+    public TMP_Text mathButtonText;
+    public TMP_Text scienceButtonText;
+    public TMP_Text englishButtonText;
+    public TMP_Text peButtonText;
+    public TMP_Text artButtonText;
+
     [Header("Stage Panel")]
     public GameObject stagePanel;
     public TMP_Text titleText;
@@ -22,168 +27,125 @@ public class DynamicStagePanel_TMP : MonoBehaviour
     public Button stageButton3;
     public Button backButton;
 
-    [Header("Flask Integration")]
-    public string flaskURL = "https://homequest-c3k7.onrender.com"; // Production FastAPI+Flask server URL
-    // For local development, change to: "http://127.0.0.1:5000"
-    public bool sendToFlask = true;
-
     private string currentSubject;
 
     void Start()
     {
-        // Initialize stage panel if assigned
-        if (stagePanel != null)
-        {
-            stagePanel.SetActive(false);
-        }
-        else
-        {
-            Debug.LogWarning("DynamicStagePanel: stagePanel is not assigned in the inspector!");
-        }
+        // Set subject names on button texts
+        SetButtonText(mathButtonText, "Math");
+        SetButtonText(scienceButtonText, "Science");
+        SetButtonText(englishButtonText, "English");
+        SetButtonText(peButtonText, "PE");
+        SetButtonText(artButtonText, "Art");
 
-        // Setup button listeners with null checks
-        if (mathButton != null)
-            mathButton.onClick.AddListener(() => ShowStages("Math"));
-        if (scienceButton != null)
-            scienceButton.onClick.AddListener(() => ShowStages("Science"));
-        if (englishButton != null)
-            englishButton.onClick.AddListener(() => ShowStages("English"));
-        if (peButton != null)
-            peButton.onClick.AddListener(() => ShowStages("PE"));
-        if (artButton != null)
-            artButton.onClick.AddListener(() => ShowStages("Art"));
+        // Setup listeners for each subject button
+        SetButtonListener(mathButton, "Math");
+        SetButtonListener(scienceButton, "Science");
+        SetButtonListener(englishButton, "English");
+        SetButtonListener(peButton, "PE");
+        SetButtonListener(artButton, "Art");
 
-        if (backButton != null)
-            backButton.onClick.AddListener(HidePanel);
+        if (backButton != null) backButton.onClick.AddListener(HidePanel);
 
-        if (stageButton1 != null)
-            stageButton1.onClick.AddListener(() => LoadStage("Stage1"));
+        if (stageButton1 != null) stageButton1.onClick.AddListener(() => LoadStage("Stage1"));
+        if (stageButton2 != null) stageButton2.onClick.AddListener(() => LoadStage("Stage2"));
+        if (stageButton3 != null) stageButton3.onClick.AddListener(() => LoadStage("Stage3"));
+
+        // Hide stage panel at start
+        if (stagePanel != null) stagePanel.SetActive(false);
 
         // Lock stage 2 and 3 at start
         SetButtonState(stageButton2, false);
         SetButtonState(stageButton3, false);
+
+        // Enable/disable subject buttons based on joined class codes
+        UpdateSubjectButtons();
     }
 
-    void ShowStages(string subject)
+    private void SetButtonText(TMP_Text buttonText, string text)
+    {
+        if (buttonText != null)
+            buttonText.text = text;
+    }
+
+    private void SetButtonListener(Button button, string subject)
+    {
+        if (button != null)
+            button.onClick.AddListener(() => ShowStages(subject));
+    }
+
+    /// <summary>
+    /// Call this after new class code is joined/verified!
+    /// </summary>
+    public void UpdateSubjectButtons()
+    {
+        string[] joined = PlayerPrefs.GetString("JoinedClasses", "").Split(',');
+        HashSet<string> joinedSubjects = new HashSet<string>();
+        foreach (string code in joined)
+        {
+            string upper = code.Trim().ToUpper();
+            if (upper.Contains("MATH")) joinedSubjects.Add("Math");
+            if (upper.Contains("SCI")) joinedSubjects.Add("Science");
+            if (upper.Contains("ENG")) joinedSubjects.Add("English");
+            if (upper.Contains("PE")) joinedSubjects.Add("PE");
+            if (upper.Contains("ART")) joinedSubjects.Add("Art");
+        }
+
+        SetSubjectButtonState(mathButton, mathButtonText, joinedSubjects.Contains("Math"));
+        SetSubjectButtonState(scienceButton, scienceButtonText, joinedSubjects.Contains("Science"));
+        SetSubjectButtonState(englishButton, englishButtonText, joinedSubjects.Contains("English"));
+        SetSubjectButtonState(peButton, peButtonText, joinedSubjects.Contains("PE"));
+        SetSubjectButtonState(artButton, artButtonText, joinedSubjects.Contains("Art"));
+    }
+
+    private void SetSubjectButtonState(Button btn, TMP_Text text, bool unlocked)
+    {
+        if (btn == null) return;
+        btn.interactable = unlocked;
+        CanvasGroup cg = btn.GetComponent<CanvasGroup>();
+        if (cg == null) cg = btn.gameObject.AddComponent<CanvasGroup>();
+        cg.alpha = unlocked ? 1f : 0.3f;
+        cg.blocksRaycasts = unlocked;
+
+        if (text != null)
+            text.color = unlocked ? Color.white : new Color(1, 1, 1, 0.5f);
+    }
+
+    private void ShowStages(string subject)
     {
         currentSubject = subject;
-        
-        if (stagePanel != null)
-        {
-            stagePanel.SetActive(true);
-        }
-        
-        if (titleText != null)
-        {
-            titleText.text = subject + " Stages";
-        }
+        if (stagePanel != null) stagePanel.SetActive(true);
+        if (titleText != null) titleText.text = subject + " Stages";
 
-        // Send subject selection to Flask (only if not in offline mode)
-        bool offlineMode = PlayerPrefs.GetInt("OfflineMode", 0) == 1;
-        if (sendToFlask && !offlineMode)
-        {
-            StartCoroutine(SendSubjectSelectionToFlask(subject));
-        }
-        else if (offlineMode)
-        {
-            Debug.Log($"Offline mode: Subject {subject} selected (not sent to server)");
-        }
+        // Lock stage 2 and 3 at open (customize if you want)
+        SetButtonState(stageButton2, false);
+        SetButtonState(stageButton3, false);
     }
 
-    void HidePanel()
+    private void HidePanel()
     {
-        if (stagePanel != null)
-        {
-            stagePanel.SetActive(false);
-        }
+        if (stagePanel != null) stagePanel.SetActive(false);
     }
 
-    void LoadStage(string stageID)
+    private void LoadStage(string stageID)
     {
         Debug.Log($"Loading {currentSubject} - {stageID}");
-        
-        // Send stage selection to Flask (only if not in offline mode)
-        bool offlineMode = PlayerPrefs.GetInt("OfflineMode", 0) == 1;
-        if (sendToFlask && !offlineMode)
-        {
-            StartCoroutine(SendStageSelectionToFlask(currentSubject, stageID));
-        }
-        else if (offlineMode)
-        {
-            Debug.Log($"Offline mode: Stage {stageID} selected for {currentSubject} (not sent to server)");
-        }
-
         SceneManager.LoadScene("GameplayScene");
 
-        // Simulate unlocking next stage (you can change this logic as needed)
-        if (stageID == "Stage1")
-        {
-            SetButtonState(stageButton2, true);
-        }
-        else if (stageID == "Stage2")
-        {
-            SetButtonState(stageButton3, true);
-        }
+        // Simulate unlocking next stage (customize as needed)
+        if (stageID == "Stage1") SetButtonState(stageButton2, true);
+        else if (stageID == "Stage2") SetButtonState(stageButton3, true);
     }
 
-    void SetButtonState(Button btn, bool active)
+    private void SetButtonState(Button btn, bool active)
     {
         if (btn != null)
         {
             btn.interactable = active;
             CanvasGroup cg = btn.GetComponent<CanvasGroup>();
             if (cg == null) cg = btn.gameObject.AddComponent<CanvasGroup>();
-            cg.alpha = active ? 1f : 0.5f;
+            cg.alpha = active ? 1f : 0.3f;
             cg.blocksRaycasts = active;
         }
-    }
-
-    // Flask Integration Methods
-    private IEnumerator SendSubjectSelectionToFlask(string subject)
-    {
-        string jsonData = "{\"subject\":\"" + subject + "\",\"action\":\"subject_selected\",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-        
-        UnityWebRequest request = new UnityWebRequest(flaskURL + "/api/subject_selection", "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-        
-        yield return request.SendWebRequest();
-        
-        if (request.result == UnityWebRequest.Result.Success)
-        {
-            Debug.Log("Successfully sent subject selection to Flask: " + subject);
-        }
-        else
-        {
-            Debug.LogWarning("Failed to send subject selection to Flask: " + request.error);
-        }
-        
-        request.Dispose();
-    }
-
-    private IEnumerator SendStageSelectionToFlask(string subject, string stage)
-    {
-        string jsonData = "{\"subject\":\"" + subject + "\",\"stage\":\"" + stage + "\",\"action\":\"stage_selected\",\"timestamp\":\"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
-        
-        UnityWebRequest request = new UnityWebRequest(flaskURL + "/api/stage_selection", "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-        
-        yield return request.SendWebRequest();
-        
-        if (request.result == UnityWebRequest.Result.Success)
-        {
-            Debug.Log("Successfully sent stage selection to Flask: " + subject + " - " + stage);
-        }
-        else
-        {
-            Debug.LogWarning("Failed to send stage selection to Flask: " + request.error);
-        }
-        
-        request.Dispose();
     }
 }
