@@ -1584,7 +1584,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 640483281}
   m_Direction: 2
   m_Value: 0.00000067903693
-  m_Size: 0
+  m_Size: 0.66090435
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1800,7 +1800,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 35.603, y: -544.5397}
+  m_AnchoredPosition: {x: 35.603, y: -437}
   m_SizeDelta: {x: 274.3359, y: 344.2202}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &407913083
@@ -2183,7 +2183,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 35.639053, y: -918.5397}
+  m_AnchoredPosition: {x: 35.639053, y: -885}
   m_SizeDelta: {x: -713.6642, y: -1776.1838}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &538506039
@@ -3141,7 +3141,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 41.50467, y: 336.18546}
+  m_AnchoredPosition: {x: 41.50467, y: 460}
   m_SizeDelta: {x: -713.6642, y: -1784.9341}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &883528994
@@ -3841,7 +3841,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Button
+  m_text: ENGLISH
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -3868,7 +3868,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 72
+  m_fontSize: 57.1
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -4556,7 +4556,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Button
+  m_text: SCIENCE
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -4583,7 +4583,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 72
+  m_fontSize: 56.55
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -4828,7 +4828,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Button
+  m_text: MATH
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -4925,7 +4925,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1462049802
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5526,7 +5526,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 35.675316, y: -168.32925}
+  m_AnchoredPosition: {x: 35.675316, y: -2}
   m_SizeDelta: {x: 274.3359, y: 333.9783}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1665315927
@@ -5636,7 +5636,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Button
+  m_text: ART
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -5893,7 +5893,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Button
+  m_text: PE
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -6966,40 +6966,35 @@ MonoBehaviour:
   stagePanelButtonTexts: []
   backButtonFromStagePanel: {fileID: 314599711}
   subjectStages:
-  - subjectCode: 
-    subjectName: MATH
+  - subjectName: MATH
     stageButton: {fileID: 10625077}
     sceneName: 
     gameplayType: 0
     canvasGroup: {fileID: 883528996}
     isUnlocked: 0
     stageUIButton: {fileID: 0}
-  - subjectCode: 
-    subjectName: SCIENCE
+  - subjectName: SCIENCE
     stageButton: {fileID: 469323668}
     sceneName: 
     gameplayType: 0
     canvasGroup: {fileID: 538506041}
     isUnlocked: 0
     stageUIButton: {fileID: 0}
-  - subjectCode: 
-    subjectName: ENGLISH
+  - subjectName: ENGLISH
     stageButton: {fileID: 2097637984}
     sceneName: 
     gameplayType: 0
     canvasGroup: {fileID: 1230123964}
     isUnlocked: 0
     stageUIButton: {fileID: 0}
-  - subjectCode: 
-    subjectName: PE
+  - subjectName: PE
     stageButton: {fileID: 431704159}
     sceneName: 
     gameplayType: 0
     canvasGroup: {fileID: 407913085}
     isUnlocked: 0
     stageUIButton: {fileID: 0}
-  - subjectCode: 
-    subjectName: ART
+  - subjectName: ART
     stageButton: {fileID: 1671770430}
     sceneName: 
     gameplayType: 0

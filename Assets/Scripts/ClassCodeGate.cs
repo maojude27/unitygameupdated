@@ -17,7 +17,6 @@ public enum GameplayType
 [System.Serializable]
 public class SubjectStage
 {
-    public string subjectCode;
     public string subjectName;
     public GameObject stageButton;
     public string sceneName;
@@ -25,6 +24,13 @@ public class SubjectStage
     public CanvasGroup canvasGroup;
     public bool isUnlocked = false;
     public Button stageUIButton;
+}
+
+[System.Serializable]
+public class JoinClassResponse
+{
+    public string subject;
+    public string gameplay_type;
 }
 
 [System.Serializable]
@@ -70,16 +76,6 @@ public class ClassCodeGate : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("ClassCodeGate: Starting setup");
-        Debug.Log("=== DEBUG INFO ===");
-        Debug.Log($"Joined Classes: {PlayerPrefs.GetString("JoinedClasses", "NONE")}");
-        Debug.Log($"Class Code Key: {PlayerPrefs.GetInt("ClassCodeEntered", 0)}");
-        foreach (SubjectStage stage in subjectStages)
-        {
-            bool isUnlocked = PlayerPrefs.GetInt($"Stage_{stage.subjectCode}_Unlocked", 0) == 1;
-            Debug.Log($"Stage {stage.subjectCode}: Unlocked = {isUnlocked}");
-        }
-        Debug.Log("===================");
         SetupClassCodeGate();
         InitializeStages();
         InitializeStagePanel();
@@ -87,10 +83,6 @@ public class ClassCodeGate : MonoBehaviour
 
     void SetupClassCodeGate()
     {
-        Debug.Log($"ClassCodeGate: Classroom mode enabled: {enableClassroomMode}");
-        Debug.Log($"ClassCodeGate: Student logged in: {IsStudentLoggedIn()}");
-        Debug.Log($"ClassCodeGate: Student name: {GetCurrentStudentName()}");
-
         if (submitButton != null)
             submitButton.onClick.AddListener(SubmitClassCode);
         if (skipButton != null)
@@ -146,10 +138,6 @@ public class ClassCodeGate : MonoBehaviour
     void UpdateStagePanelButtons()
     {
         if (stagePanelButtons == null) return;
-        Debug.Log($"Updating stage panel buttons. Unlocked stages: {unlockedStages.Count}");
-        foreach (string stage in unlockedStages)
-            Debug.Log($"  - {stage}");
-
         for (int i = 0; i < stagePanelButtons.Length; i++)
         {
             if (stagePanelButtons[i] != null)
@@ -158,15 +146,14 @@ public class ClassCodeGate : MonoBehaviour
                 stagePanelButtons[i].interactable = hasUnlockedStage;
                 if (hasUnlockedStage)
                 {
-                    string subjectCode = unlockedStages[i];
-                    string subjectName = GetSubjectNameByCode(subjectCode);
+                    string subjectName = unlockedStages[i];
                     if (stagePanelButtonTexts != null && i < stagePanelButtonTexts.Length && stagePanelButtonTexts[i] != null)
                         stagePanelButtonTexts[i].text = subjectName;
                     Image buttonImage = stagePanelButtons[i].GetComponent<Image>();
                     if (buttonImage != null)
                         buttonImage.color = Color.white;
                     stagePanelButtons[i].onClick.RemoveAllListeners();
-                    stagePanelButtons[i].onClick.AddListener(() => LoadSubjectScene(subjectCode));
+                    stagePanelButtons[i].onClick.AddListener(() => LoadSubjectScene(subjectName));
                 }
                 else
                 {
@@ -181,57 +168,12 @@ public class ClassCodeGate : MonoBehaviour
         }
     }
 
-    string GetSubjectNameByCode(string code)
-    {
-        foreach (SubjectStage stage in subjectStages)
-        {
-            if (stage.subjectCode.Equals(code, System.StringComparison.OrdinalIgnoreCase))
-                return stage.subjectName;
-        }
-        code = code.ToUpper();
-        if (code.Contains("MATH") || code == "1XJBWKG") return "Math";
-        if (code.Contains("ENG")) return "English";
-        if (code.Contains("SCI")) return "Science";
-        if (code.Contains("CS")) return "Computer Science";
-        if (code.Contains("PHYS")) return "Physics";
-        if (code.Contains("CHEM")) return "Chemistry";
-        return code;
-    }
-
-    string MapClassCodeToSubject(string classCode)
-    {
-        classCode = classCode.ToUpper();
-        if (classCode == "1XJBWKG") return "MATH";
-        if (classCode.Contains("MATH")) return "MATH";
-        if (classCode.Contains("ENG")) return "ENG";
-        if (classCode.Contains("SCI")) return "SCI";
-        if (classCode.Contains("CS")) return "CS";
-        if (classCode.Contains("PHYS")) return "PHYS";
-        if (classCode.Contains("CHEM")) return "CHEM";
-        if (classCode.Contains("PE")) return "PE";
-        if (classCode.Contains("ART")) return "ART";
-        return classCode;
-    }
-
-    string GetGameplaySceneName(GameplayType type)
-    {
-        switch (type)
-        {
-            case GameplayType.MultipleChoice: return "GameplayScene";
-            case GameplayType.Enumeration: return "GPenumeration";
-            case GameplayType.FillInBlank: return "Gpfillblank";
-            case GameplayType.YesNo: return "GPyesno";
-            default: return "GameplayScene";
-        }
-    }
-
     public void ShowStagePanel()
     {
         if (stagePanel != null)
         {
             stagePanel.SetActive(true);
             UpdateStagePanelButtons();
-            Debug.Log("Stage panel shown with " + unlockedStages.Count + " unlocked stages");
         }
     }
 
@@ -241,13 +183,13 @@ public class ClassCodeGate : MonoBehaviour
             stagePanel.SetActive(false);
     }
 
-    void LoadSubjectScene(string subjectCode)
+    void LoadSubjectScene(string subjectName)
     {
         foreach (SubjectStage stage in subjectStages)
         {
-            if (stage.subjectCode.Equals(subjectCode, System.StringComparison.OrdinalIgnoreCase))
+            if (stage.subjectName.Equals(subjectName, System.StringComparison.OrdinalIgnoreCase))
             {
-                string sceneToLoad = !string.IsNullOrEmpty(stage.sceneName) ? stage.sceneName : GetGameplaySceneName(stage.gameplayType);
+                string sceneToLoad = GetGameplaySceneName(stage.gameplayType);
                 if (!string.IsNullOrEmpty(sceneToLoad))
                 {
                     UpdateStatus($"Loading {stage.subjectName}...", Color.green);
@@ -256,8 +198,19 @@ public class ClassCodeGate : MonoBehaviour
                 }
             }
         }
-        Debug.LogWarning($"No scene found for subject code: {subjectCode}");
-        UpdateStatus($"Scene not configured for {subjectCode}", Color.red);
+        UpdateStatus($"Scene not configured for {subjectName}", Color.red);
+    }
+
+    string GetGameplaySceneName(GameplayType type)
+    {
+        switch (type)
+        {
+            case GameplayType.MultipleChoice: return "GameplayScene";
+            case GameplayType.Enumeration: return "GPenumeration";
+            case GameplayType.FillInBlank: return "GPfillblank";
+            case GameplayType.YesNo: return "GPyesno";
+            default: return "GameplayScene";
+        }
     }
 
     void UpdateStatus(string message, Color color)
@@ -335,7 +288,7 @@ public class ClassCodeGate : MonoBehaviour
         if (enableClassroomMode)
             StartCoroutine(JoinClassWithAPI(enteredCode));
         else
-            AcceptClassCode(enteredCode);
+            AcceptClassCode(enteredCode, GameplayType.MultipleChoice); // Default type for legacy
     }
 
     IEnumerator JoinClassWithAPI(string classCode)
@@ -360,12 +313,17 @@ public class ClassCodeGate : MonoBehaviour
         yield return request.SendWebRequest();
 
         bool success = false;
-        string subjectToUnlock = MapClassCodeToSubject(classCode);
+        string subjectToUnlock = classCode;
+        GameplayType gameplayTypeToSet = GameplayType.MultipleChoice;
 
         if (request.result == UnityWebRequest.Result.Success && request.responseCode == 200)
         {
+            // Parse backend response
+            string responseText = request.downloadHandler.text;
+            JoinClassResponse response = JsonUtility.FromJson<JoinClassResponse>(responseText);
+            subjectToUnlock = response.subject;
+            gameplayTypeToSet = ParseGameplayType(response.gameplay_type);
             success = true;
-            Debug.Log("Successfully joined class via API: " + classCode);
         }
         else if (request.responseCode == 404)
         {
@@ -373,7 +331,6 @@ public class ClassCodeGate : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("API join failed: " + request.error);
             UpdateStatus("Failed to join class: " + request.error, Color.red);
         }
 
@@ -381,9 +338,9 @@ public class ClassCodeGate : MonoBehaviour
 
         if (success)
         {
-            UpdateStatus($"Successfully joined class: {classCode}!", Color.green);
-            AcceptClassCode(classCode);
-            UnlockSubjectStage(subjectToUnlock);
+            UpdateStatus($"Successfully joined class: {subjectToUnlock}!", Color.green);
+            AcceptClassCode(subjectToUnlock, gameplayTypeToSet);
+            UnlockSubjectStageByName(subjectToUnlock, gameplayTypeToSet);
 
             yield return new WaitForSeconds(1f);
             ShowExistingClasses();
@@ -402,9 +359,20 @@ public class ClassCodeGate : MonoBehaviour
             classCodeInput.text = "";
     }
 
-    void AcceptClassCode(string classCode)
+    GameplayType ParseGameplayType(string type)
     {
-        Debug.Log("Class code accepted: " + classCode);
+        switch (type.ToLower())
+        {
+            case "multiplechoice": return GameplayType.MultipleChoice;
+            case "enumeration": return GameplayType.Enumeration;
+            case "fillinblank": return GameplayType.FillInBlank;
+            case "yesno": return GameplayType.YesNo;
+            default: return GameplayType.MultipleChoice;
+        }
+    }
+
+    void AcceptClassCode(string classCode, GameplayType gameplayType)
+    {
         PlayerPrefs.SetInt(CLASS_CODE_KEY, 1);
         PlayerPrefs.SetString("LastClassCode", classCode);
         PlayerPrefs.Save();
@@ -412,16 +380,19 @@ public class ClassCodeGate : MonoBehaviour
         LoadUnlockedStages();
     }
 
-    void UnlockSubjectStage(string subjectCode)
+    void UnlockSubjectStageByName(string subjectName, GameplayType gameplayType)
     {
-        Debug.Log($"Attempting to unlock stage: {subjectCode}");
-        bool stageFound = false;
         foreach (SubjectStage stage in subjectStages)
         {
-            if (stage.subjectCode.Equals(subjectCode, System.StringComparison.OrdinalIgnoreCase))
+            if (stage.subjectName.Equals(subjectName, System.StringComparison.OrdinalIgnoreCase))
             {
-                stageFound = true;
-                Debug.Log($"Found matching stage: {stage.subjectCode} ({stage.subjectName})");
+                stage.isUnlocked = true;
+                stage.gameplayType = gameplayType;
+                if (!unlockedStages.Contains(stage.subjectName))
+                    unlockedStages.Add(stage.subjectName);
+                PlayerPrefs.SetInt($"Stage_{stage.subjectName}_Unlocked", 1);
+                PlayerPrefs.SetString($"Stage_{stage.subjectName}_GameplayType", gameplayType.ToString());
+                PlayerPrefs.Save();
                 if (stage.canvasGroup != null)
                     StartCoroutine(FadeInStage(stage.canvasGroup));
                 if (stage.stageButton != null)
@@ -433,26 +404,9 @@ public class ClassCodeGate : MonoBehaviour
                     if (btnText != null)
                         btnText.text = stage.subjectName;
                 }
-                stage.isUnlocked = true;
-                if (!unlockedStages.Contains(subjectCode))
-                {
-                    unlockedStages.Add(subjectCode);
-                    Debug.Log($"Added {subjectCode} to unlocked stages list");
-                }
-                PlayerPrefs.SetInt($"Stage_{subjectCode}_Unlocked", 1);
-                PlayerPrefs.Save();
-                Debug.Log($"Stage {subjectCode} unlocked? {PlayerPrefs.GetInt($"Stage_{subjectCode}_Unlocked", 0) == 1}");
                 UpdateStagePanelButtons();
-                Debug.Log($"Successfully unlocked stage: {subjectCode}");
                 break;
             }
-        }
-        if (!stageFound)
-        {
-            Debug.LogWarning($"No stage found with code: {subjectCode}");
-            Debug.Log("Available stages:");
-            foreach (SubjectStage stage in subjectStages)
-                Debug.Log($"  - {stage.subjectCode} ({stage.subjectName})");
         }
     }
 
@@ -473,23 +427,21 @@ public class ClassCodeGate : MonoBehaviour
 
     void LoadUnlockedStages()
     {
-        Debug.Log("Loading unlocked stages...");
         unlockedStages.Clear();
         string joinedClasses = PlayerPrefs.GetString("JoinedClasses", "");
-        Debug.Log($"Joined classes from PlayerPrefs: {joinedClasses}");
         if (!string.IsNullOrEmpty(joinedClasses))
         {
             string[] classes = joinedClasses.Split(',');
-            foreach (string classCode in classes)
+            foreach (string subjectName in classes)
             {
-                string mappedSubject = MapClassCodeToSubject(classCode);
-                Debug.Log($"Checking class code {classCode} -> mapped to {mappedSubject}");
-                if (!unlockedStages.Contains(mappedSubject))
-                    UnlockSubjectStage(mappedSubject);
+                GameplayType type = GameplayType.MultipleChoice;
+                string typeStr = PlayerPrefs.GetString($"Stage_{subjectName}_GameplayType", "MultipleChoice");
+                type = ParseGameplayType(typeStr);
+                if (!unlockedStages.Contains(subjectName))
+                    UnlockSubjectStageByName(subjectName, type);
             }
         }
         UpdateStagePanelButtons();
-        Debug.Log($"Finished loading unlocked stages. Total unlocked: {unlockedStages.Count}");
     }
 
     void SkipClassCode()
@@ -509,7 +461,6 @@ public class ClassCodeGate : MonoBehaviour
             UpdateStatus("Welcome back! Click 'Join Class' when ready to add more subjects", Color.green);
         else
             UpdateStatus("Click 'Join Class' when you're ready to enter class codes", Color.blue);
-        Debug.Log("Class code entry cancelled by user");
     }
 
     void TransitionToSubjects()
@@ -518,10 +469,7 @@ public class ClassCodeGate : MonoBehaviour
         if (classCodePanel != null)
             classCodePanel.SetActive(false);
         if (subjectButtonsContainer != null)
-        {
             subjectButtonsContainer.SetActive(true);
-            Debug.Log("Subject buttons container activated");
-        }
         RemoveStaticElements();
     }
 
@@ -557,8 +505,8 @@ public class ClassCodeGate : MonoBehaviour
         {
             string[] classes = joinedClasses.Split(',');
             string classDisplay = "Your Classes:\n";
-            foreach (string classCode in classes)
-                classDisplay += $"• {classCode}\n";
+            foreach (string className in classes)
+                classDisplay += $"• {className}\n";
             if (currentClassesText != null)
                 currentClassesText.text = classDisplay;
             UpdateStatus($"You are in {classes.Length} class(es)", Color.green);
@@ -597,7 +545,8 @@ public class ClassCodeGate : MonoBehaviour
         PlayerPrefs.DeleteKey("LastClassCode");
         foreach (SubjectStage stage in subjectStages)
         {
-            PlayerPrefs.DeleteKey($"Stage_{stage.subjectCode}_Unlocked");
+            PlayerPrefs.DeleteKey($"Stage_{stage.subjectName}_Unlocked");
+            PlayerPrefs.DeleteKey($"Stage_{stage.subjectName}_GameplayType");
             stage.isUnlocked = false;
             if (stage.canvasGroup != null)
             {
@@ -622,7 +571,6 @@ public class ClassCodeGate : MonoBehaviour
                 obj.name.ToLower().Contains("placeholder") ||
                 obj.name.ToLower().Contains("demo"))
             {
-                Debug.Log($"Removing static element: {obj.name}");
                 obj.SetActive(false);
             }
         }
@@ -634,14 +582,13 @@ public class ClassCodeGate : MonoBehaviour
         if (joinedClasses.Length > 0)
         {
             string classDisplay = "Your Classes:\n";
-            foreach (string classCode in joinedClasses)
-                classDisplay += $"📚 {classCode}\n";
+            foreach (string className in joinedClasses)
+                classDisplay += $"📚 {className}\n";
             if (currentClassesText != null)
             {
                 currentClassesText.text = classDisplay;
                 currentClassesText.gameObject.SetActive(true);
             }
-            Debug.Log($"Student joined classes: {string.Join(", ", joinedClasses)}");
         }
     }
 }
