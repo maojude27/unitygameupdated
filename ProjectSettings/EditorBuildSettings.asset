@@ -15,7 +15,7 @@ EditorBuildSettings:
     path: Assets/Scenes/titlescreen.unity
     guid: 045a9674dfea14f49bc62f96d0e3b4c0
   - enabled: 1
-    path: Assets/Scenes/loadingscreenM.unity
+    path: Assets/Scenes/loadingscreen.unity
     guid: 948e4f8324c5bc043afb4e10afc8e07a
   - enabled: 1
     path: Assets/Scenes/MainMenu.unity
@@ -41,6 +41,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/gender.unity
     guid: e5817115577984149a4211e5f031655c
+  - enabled: 1
+    path: Assets/Scenes/loadingscreenF.unity
+    guid: 1710a821f0297b146afd9390b6475aed
   m_configObjects:
     com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000, guid: bc38cd225c89364419619a96f9fbf82d, type: 2}
     com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: da23a4089b47ebf43af279870c8d78ab, type: 2}
