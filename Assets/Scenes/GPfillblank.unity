@@ -381,10 +381,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c944a279dbf433c4fb4a7c411f1cd73c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackController: {fileID: 0}
   allowMultipleButtons: 0
   autoTriggerOnDrop: 1
   buttonSpacing: {x: 120, y: 0}
+  attackController: {fileID: 0}
   flaskServerUrl: http://127.0.0.1:5000
   sendToFlask: 1
   highlightColor: {r: 0.8, g: 1, b: 0.8, a: 0.3}
@@ -965,7 +965,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000061035156, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &321227317
@@ -1369,6 +1369,58 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 479413672}
   m_CullTransparentMesh: 1
+--- !u!1 &500253291
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 500253292}
+  - component: {fileID: 500253293}
+  m_Layer: 0
+  m_Name: attackcontroller
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &500253292
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 500253291}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 659.7742, y: 1412.6575, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &500253293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 500253291}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6ed8aba115b6ab4885c9b184885fb60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerRect: {fileID: 0}
+  playerTransform: {fileID: 0}
+  buttons: []
+  enemiesUI: []
+  enemiesWorld: []
+  uiAttackOffset: 100
+  worldAttackOffset: 1.5
+  waitSeconds: 2
 --- !u!1 &544840052
 GameObject:
   m_ObjectHideFlags: 0
@@ -1539,7 +1591,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -1.6956177, y: -643.65045}
+  m_AnchoredPosition: {x: -1.6955566, y: -643.6504}
   m_SizeDelta: {x: 3.3911, y: -1287.3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &634313046
@@ -1699,7 +1751,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 126.46354}
+  m_AnchoredPosition: {x: 0, y: 126.46362}
   m_SizeDelta: {x: 0, y: 252.927}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &711935991
@@ -2240,7 +2292,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -127.50328}
+  m_AnchoredPosition: {x: 0, y: -127.503174}
   m_SizeDelta: {x: 0, y: -255.0071}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &997924085
@@ -3109,73 +3161,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1468432944}
-  - component: {fileID: 1468432943}
   m_Layer: 0
-  m_Name: ProgressManager
+  m_Name: dragndropscript
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1468432943
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1468432942}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99d678cc08d02204ab177c5892e45613, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameMode: 0
-  player: {fileID: 655427857}
-  enemy1: {fileID: 1079777838}
-  attackOffset: 100
-  movementSpeed: 2
-  maleSprite: {fileID: 0}
-  femaleSprite: {fileID: 0}
-  enemySprites: []
-  playerImage: {fileID: 0}
-  enemyImage: {fileID: 0}
-  playerSpeechBubble: {fileID: 1057227505}
-  playerSpeechText: {fileID: 1719088085}
-  enemySpeechBubble: {fileID: 344031616}
-  enemySpeechText: {fileID: 2002112509}
-  answerButtons:
-  - {fileID: 211323454}
-  dropZone: {fileID: 88043023}
-  answerInputField: {fileID: 0}
-  submitAnswerButton: {fileID: 0}
-  clearAnswersButton: {fileID: 0}
-  answersDisplayText: {fileID: 0}
-  inputFeedbackText: {fileID: 0}
-  questionText: {fileID: 0}
-  maxAnswers: 5
-  minimumAnswersRequired: 3
-  allowDuplicateAnswers: 0
-  caseSensitiveAnswers: 0
-  answerToggles: []
-  submitToggleButton: {fileID: 0}
-  multipleChoiceFeedbackText: {fileID: 0}
-  passingScorePercentage: 0
-  currentQuestion: 
-  clearAnswersAfterSubmission: 1
-  clearDelay: 1
-  progressBar: {fileID: 927754431}
-  textProgress: {fileID: 1074957457}
-  resultPanel: {fileID: 321227315}
-  dialogueAt0: "Let\u2019s begin the challenge!"
-  dialogueAt25: Good start, keep going!
-  dialogueAt50: Halfway there!
-  dialogueAt75: Almost done, stay focused!
-  dialogueAt100: Congratulations, you did it!
-  dialogueText: {fileID: 2112241033}
-  flaskURL: https://homequest-c3k7.onrender.com
-  sendToFlask: 1
-  studentId: 1
-  assignmentId: 1
 --- !u!4 &1468432944
 Transform:
   m_ObjectHideFlags: 0
@@ -4551,3 +4543,4 @@ SceneRoots:
   - {fileID: 1743315046}
   - {fileID: 974111855}
   - {fileID: 1468432944}
+  - {fileID: 500253292}

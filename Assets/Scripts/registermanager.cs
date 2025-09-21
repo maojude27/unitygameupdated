@@ -30,7 +30,7 @@ public class RegisterManager : MonoBehaviour
         if (loginButton != null)
         {
             loginButton.onClick.AddListener(GoBackToLogin);
-            loginButton.gameObject.SetActive(false); // Hide login button at start
+            loginButton.gameObject.SetActive(true); // Show login button at start
         }
     }
 
@@ -129,6 +129,9 @@ public class RegisterManager : MonoBehaviour
                         Debug.LogError($"Server returned failure or missing ID: {response.status}, ID: {response.student_id}");
                         if (loginButton != null)
                             loginButton.gameObject.SetActive(true);
+                        if (submitButton != null)
+                            submitButton.interactable = true;
+                        EnableAllInputs();
                     }
                 }
                 catch (Exception e)
@@ -138,6 +141,9 @@ public class RegisterManager : MonoBehaviour
                     Debug.LogError($"Raw response: {request.downloadHandler.text}");
                     if (loginButton != null)
                         loginButton.gameObject.SetActive(true);
+                    if (submitButton != null)
+                        submitButton.interactable = true;
+                    EnableAllInputs();
                 }
             }
             else
@@ -148,6 +154,18 @@ public class RegisterManager : MonoBehaviour
                 Debug.LogError($"Response body: {request.downloadHandler.text}");
                 if (loginButton != null)
                     loginButton.gameObject.SetActive(true);
+                if (submitButton != null)
+                    submitButton.interactable = true;
+                EnableAllInputs();
+    // Re-enable all input fields after error
+    void EnableAllInputs()
+    {
+        if (firstNameInput != null) firstNameInput.interactable = true;
+        if (lastNameInput != null) lastNameInput.interactable = true;
+        if (emailInput != null) emailInput.interactable = true;
+        if (passwordInput != null) passwordInput.interactable = true;
+        if (confirmPasswordInput != null) confirmPasswordInput.interactable = true;
+    }
             }
         }
     }
@@ -170,6 +188,16 @@ public class RegisterManager : MonoBehaviour
     public void GoBackToLogin()
     {
         SceneManager.LoadScene("login");
+    }
+
+    // Re-enable all input fields after error
+    void EnableAllInputs()
+    {
+        if (firstNameInput != null) firstNameInput.interactable = true;
+        if (lastNameInput != null) lastNameInput.interactable = true;
+        if (emailInput != null) emailInput.interactable = true;
+        if (passwordInput != null) passwordInput.interactable = true;
+        if (confirmPasswordInput != null) confirmPasswordInput.interactable = true;
     }
 }
 

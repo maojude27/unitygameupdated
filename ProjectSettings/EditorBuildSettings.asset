@@ -42,7 +42,7 @@ EditorBuildSettings:
     path: Assets/Scenes/gender.unity
     guid: e5817115577984149a4211e5f031655c
   - enabled: 1
-    path: Assets/Scenes/loadingscreenF.unity
+    path: Assets/Scenes/loadingscreenM.unity
     guid: 1710a821f0297b146afd9390b6475aed
   m_configObjects:
     com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000, guid: bc38cd225c89364419619a96f9fbf82d, type: 2}
